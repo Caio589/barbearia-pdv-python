@@ -8,7 +8,7 @@ import io
 app = Flask(__name__)
 criar_tabelas()
 
-# ---------------- HOME ----------------
+# ================= HOME =================
 @app.route("/")
 def home():
     con = conectar()
@@ -34,19 +34,19 @@ def home():
 
     mes = datetime.now().strftime("%Y-%m")
 
-    def total_pagamento(p):
+    def total(p):
         c.execute("""
             SELECT IFNULL(SUM(valor),0)
             FROM caixa
             WHERE tipo='entrada'
-              AND pagamento=?
-              AND strftime('%Y-%m', data)=?
+            AND pagamento=?
+            AND strftime('%Y-%m', data)=?
         """, (p, mes))
         return c.fetchone()[0]
 
-    total_dinheiro = total_pagamento("Dinheiro")
-    total_pix = total_pagamento("Pix")
-    total_cartao = total_pagamento("Cartão")
+    total_dinheiro = total("Dinheiro")
+    total_pix = total("Pix")
+    total_cartao = total("Cartão")
     total_mes = total_dinheiro + total_pix + total_cartao
 
     con.close()
@@ -65,22 +65,23 @@ def home():
         total_mes=total_mes
     )
 
-# ---------------- CAIXA ----------------
+# ================= CAIXA =================
 @app.route("/abrir_caixa", methods=["POST"])
 def abrir_caixa():
-    saldo = request.form.get("saldo", "0").replace(",", ".")
     try:
-        saldo = float(saldo)
+        saldo = float(request.form.get("saldo", "0").replace(",", "."))
     except:
         saldo = 0.0
 
     con = conectar()
     c = con.cursor()
+
     c.execute("UPDATE caixa_status SET aberto=1, saldo_inicial=?", (saldo,))
     c.execute("""
         INSERT INTO caixa (descricao, valor, tipo, pagamento)
         VALUES ('Abertura de Caixa', ?, 'entrada', 'Dinheiro')
     """, (saldo,))
+
     con.commit()
     con.close()
     return redirect("/")
@@ -93,7 +94,7 @@ def fechar_caixa():
     con.close()
     return redirect("/")
 
-# ---------------- API PREÇO ----------------
+# ================= API PREÇO =================
 @app.route("/preco/<tipo>/<int:item_id>")
 def preco(tipo, item_id):
     con = conectar()
@@ -108,7 +109,7 @@ def preco(tipo, item_id):
     con.close()
     return jsonify(row[0] if row else 0)
 
-# ---------------- VENDA ----------------
+# ================= VENDA =================
 @app.route("/venda", methods=["POST"])
 def venda():
     tipo = request.form.get("tipo")
@@ -147,7 +148,69 @@ def venda():
     con.close()
     return redirect("/")
 
-# ---------------- PLANOS (CORRIGIDO) ----------------
+# ================= CADASTROS =================
+@app.route("/add_cliente", methods=["POST"])
+def add_cliente():
+    nome = request.form.get("nome")
+    telefone = request.form.get("telefone", "")
+
+    if not nome:
+        return redirect("/")
+
+    con = conectar()
+    con.cursor().execute(
+        "INSERT INTO clientes (nome, telefone) VALUES (?,?)",
+        (nome, telefone)
+    )
+    con.commit()
+    con.close()
+    return redirect("/")
+
+@app.route("/add_servico", methods=["POST"])
+def add_servico():
+    nome = request.form.get("nome")
+    preco = request.form.get("preco")
+
+    if not nome or not preco:
+        return redirect("/")
+
+    try:
+        preco = float(preco.replace(",", "."))
+    except:
+        preco = 0.0
+
+    con = conectar()
+    con.cursor().execute(
+        "INSERT INTO servicos (nome, preco) VALUES (?,?)",
+        (nome, preco)
+    )
+    con.commit()
+    con.close()
+    return redirect("/")
+
+@app.route("/add_produto", methods=["POST"])
+def add_produto():
+    nome = request.form.get("nome")
+    preco = request.form.get("preco")
+
+    if not nome or not preco:
+        return redirect("/")
+
+    try:
+        preco = float(preco.replace(",", "."))
+    except:
+        preco = 0.0
+
+    con = conectar()
+    con.cursor().execute(
+        "INSERT INTO produtos (nome, preco) VALUES (?,?)",
+        (nome, preco)
+    )
+    con.commit()
+    con.close()
+    return redirect("/")
+
+# ================= PLANOS =================
 @app.route("/add_plano", methods=["POST"])
 def add_plano():
     nome = request.form.get("nome")
@@ -246,13 +309,13 @@ def usar_plano():
     con.close()
     return redirect("/")
 
-# ---------------- PDF ----------------
+# ================= PDF =================
 @app.route("/relatorio_pdf")
 def relatorio_pdf():
     con = conectar()
     c = con.cursor()
-    mes = datetime.now().strftime("%Y-%m")
 
+    mes = datetime.now().strftime("%Y-%m")
     c.execute("""
         SELECT descricao, valor, pagamento, data
         FROM caixa
