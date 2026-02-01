@@ -8,7 +8,6 @@ import os
 
 app = Flask(__name__)
 
-# ================= HOME =================
 @app.route("/")
 def home():
     con = conectar()
@@ -30,11 +29,10 @@ def home():
     caixa = c.fetchall()
 
     c.execute("SELECT aberto FROM caixa_status WHERE id=1")
-    aberto = c.fetchone()[0]
+    aberto = c.fetchone()["aberto"]
 
-    # -------- AGENDA --------
     c.execute("""
-        SELECT a.id, a.data, a.hora, c.nome, s.nome
+        SELECT a.id, a.data, a.hora, c.nome AS cliente, s.nome AS servico
         FROM agenda a
         JOIN clientes c ON c.id = a.cliente_id
         JOIN servicos s ON s.id = a.servico_id
@@ -42,18 +40,17 @@ def home():
     """)
     agenda = c.fetchall()
 
-    # -------- RELATÓRIO --------
     mes = datetime.now().strftime("%Y-%m")
 
     def total(p):
         c.execute("""
-            SELECT COALESCE(SUM(valor), 0)
+            SELECT COALESCE(SUM(valor), 0) AS total
             FROM caixa
-            WHERE tipo = 'entrada'
-              AND pagamento = %s
-              AND TO_CHAR(data, 'YYYY-MM') = %s
+            WHERE tipo='entrada'
+              AND pagamento=%s
+              AND TO_CHAR(data, 'YYYY-MM')=%s
         """, (p, mes))
-        return c.fetchone()[0]
+        return c.fetchone()["total"]
 
     total_dinheiro = total("Dinheiro")
     total_pix = total("Pix")
@@ -76,174 +73,6 @@ def home():
         total_cartao=total_cartao,
         total_mes=total_mes
     )
-
-# ================= CAIXA =================
-@app.route("/abrir_caixa", methods=["POST"])
-def abrir_caixa():
-    try:
-        saldo = float(request.form.get("saldo", "0").replace(",", "."))
-    except:
-        saldo = 0.0
-
-    con = conectar()
-    c = con.cursor()
-
-    c.execute("UPDATE caixa_status SET aberto=1, saldo_inicial=%s", (saldo,))
-    c.execute("""
-        INSERT INTO caixa (descricao, valor, tipo, pagamento)
-        VALUES ('Abertura de Caixa', %s, 'entrada', 'Dinheiro')
-    """, (saldo,))
-
-    con.commit()
-    con.close()
-    return redirect("/")
-
-@app.route("/fechar_caixa")
-def fechar_caixa():
-    con = conectar()
-    con.cursor().execute("UPDATE caixa_status SET aberto=0")
-    con.commit()
-    con.close()
-    return redirect("/")
-
-# ================= API PREÇO =================
-@app.route("/preco/<tipo>/<int:item_id>")
-def preco(tipo, item_id):
-    con = conectar()
-    c = con.cursor()
-
-    if tipo == "servico":
-        c.execute("SELECT preco FROM servicos WHERE id=%s", (item_id,))
-    else:
-        c.execute("SELECT preco FROM produtos WHERE id=%s", (item_id,))
-
-    row = c.fetchone()
-    con.close()
-    return jsonify(row[0] if row else 0)
-
-# ================= VENDA =================
-@app.route("/venda", methods=["POST"])
-def venda():
-    tipo = request.form.get("tipo")
-    item_id = request.form.get("item")
-    pagamento = request.form.get("pagamento", "Dinheiro")
-
-    if not tipo or not item_id:
-        return redirect("/")
-
-    con = conectar()
-    c = con.cursor()
-
-    c.execute("SELECT aberto FROM caixa_status WHERE id=1")
-    if c.fetchone()[0] != 1:
-        con.close()
-        return redirect("/")
-
-    if tipo == "servico":
-        c.execute("SELECT nome, preco FROM servicos WHERE id=%s", (item_id,))
-    else:
-        c.execute("SELECT nome, preco FROM produtos WHERE id=%s", (item_id,))
-
-    nome, preco = c.fetchone()
-
-    c.execute("""
-        INSERT INTO caixa (descricao, valor, tipo, pagamento)
-        VALUES (%s, %s, 'entrada', %s)
-    """, (f"{tipo.title()}: {nome}", preco, pagamento))
-
-    con.commit()
-    con.close()
-    return redirect("/")
-
-# ================= CADASTROS =================
-@app.route("/add_cliente", methods=["POST"])
-def add_cliente():
-    nome = request.form.get("nome")
-    telefone = request.form.get("telefone", "")
-
-    if not nome:
-        return redirect("/")
-
-    con = conectar()
-    con.cursor().execute(
-        "INSERT INTO clientes (nome, telefone) VALUES (%s,%s)",
-        (nome, telefone)
-    )
-    con.commit()
-    con.close()
-    return redirect("/")
-
-@app.route("/add_servico", methods=["POST"])
-def add_servico():
-    nome = request.form.get("nome")
-    preco = request.form.get("preco")
-
-    if not nome or not preco:
-        return redirect("/")
-
-    try:
-        preco = float(preco.replace(",", "."))
-    except:
-        preco = 0.0
-
-    con = conectar()
-    con.cursor().execute(
-        "INSERT INTO servicos (nome, preco) VALUES (%s,%s)",
-        (nome, preco)
-    )
-    con.commit()
-    con.close()
-    return redirect("/")
-
-@app.route("/add_produto", methods=["POST"])
-def add_produto():
-    nome = request.form.get("nome")
-    preco = request.form.get("preco")
-
-    if not nome or not preco:
-        return redirect("/")
-
-    try:
-        preco = float(preco.replace(",", "."))
-    except:
-        preco = 0.0
-
-    con = conectar()
-    con.cursor().execute(
-        "INSERT INTO produtos (nome, preco) VALUES (%s,%s)",
-        (nome, preco)
-    )
-    con.commit()
-    con.close()
-    return redirect("/")
-
-# ================= AGENDA =================
-@app.route("/add_agenda", methods=["POST"])
-def add_agenda():
-    data = request.form.get("data")
-    hora = request.form.get("hora")
-    cliente = request.form.get("cliente")
-    servico = request.form.get("servico")
-
-    if not data or not hora or not cliente or not servico:
-        return redirect("/")
-
-    con = conectar()
-    con.cursor().execute(
-        "INSERT INTO agenda (data, hora, cliente_id, servico_id) VALUES (%s,%s,%s,%s)",
-        (data, hora, cliente, servico)
-    )
-    con.commit()
-    con.close()
-    return redirect("/")
-
-@app.route("/del_agenda/<int:id>")
-def del_agenda(id):
-    con = conectar()
-    con.cursor().execute("DELETE FROM agenda WHERE id=%s", (id,))
-    con.commit()
-    con.close()
-    return redirect("/")
 
 # ================= PDF =================
 @app.route("/relatorio_pdf")
@@ -271,7 +100,11 @@ def relatorio_pdf():
     y = h - 90
     pdf.setFont("Helvetica", 10)
     for d in dados:
-        pdf.drawString(50, y, f"{d[3][:10]} | {d[0]} | R$ {d[1]:.2f} | {d[2]}")
+        pdf.drawString(
+            50,
+            y,
+            f"{d['data']:%Y-%m-%d} | {d['descricao']} | R$ {float(d['valor']):.2f} | {d['pagamento']}"
+        )
         y -= 14
         if y < 40:
             pdf.showPage()
@@ -281,7 +114,7 @@ def relatorio_pdf():
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name="relatorio_mensal.pdf")
 
-# ================= START APP =================
+# ================= START =================
 if __name__ == "__main__":
     criar_tabelas()
     port = int(os.environ.get("PORT", 5000))
