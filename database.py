@@ -11,7 +11,9 @@ def criar_tabelas():
     CREATE TABLE IF NOT EXISTS clientes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT,
-        telefone TEXT
+        telefone TEXT,
+        plano_id INTEGER,
+        saldo_plano INTEGER DEFAULT 0
     )
     """)
 
@@ -35,7 +37,25 @@ def criar_tabelas():
     CREATE TABLE IF NOT EXISTS planos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT,
-        valor REAL
+        valor REAL,
+        limite INTEGER
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS plano_servicos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        plano_id INTEGER,
+        servico_id INTEGER
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS uso_plano (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cliente_id INTEGER,
+        servico_id INTEGER,
+        data DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
 
