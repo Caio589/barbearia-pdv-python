@@ -5,7 +5,7 @@ DATABASE_URL = os.environ.getpostgresql://barbearia_db_k3da_user:Qc72SeyRPeoVVYv
 
 def conectar():
     if not DATABASE_URL:
-        raise Exception("DATABASE_URL não encontrada no ambiente")
+        raise Exception(DATABASE_URL)
     return psycopg2.connect(DATABASE_URL)
 
 
