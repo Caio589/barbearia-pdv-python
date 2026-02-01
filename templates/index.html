@@ -170,13 +170,59 @@
 <div id="planos" class="page hidden">
 <h1>Planos</h1>
 
+<!-- CRIAR PLANO -->
 <form method="POST" action="/add_plano" class="box">
   <input name="nome" placeholder="Nome do plano" required>
   <input name="valor" placeholder="Valor mensal" required>
   <input name="limite" placeholder="Quantidade de usos">
   <button>Criar Plano</button>
 </form>
+
+<!-- ATIVAR PLANO -->
+<h3>Ativar plano</h3>
+<form method="POST" action="/ativar_plano" class="box">
+  <select name="cliente" required>
+    {% for c in clientes %}
+    <option value="{{ c[0] }}">{{ c[1] }}</option>
+    {% endfor %}
+  </select>
+
+  <select name="plano" required>
+    {% for p in planos %}
+    <option value="{{ p[0] }}">{{ p[1] }}</option>
+    {% endfor %}
+  </select>
+
+  <select name="pagamento">
+    <option>Dinheiro</option>
+    <option>Pix</option>
+    <option>Cartão</option>
+  </select>
+
+  <button>Ativar Plano</button>
+</form>
+
+<!-- USAR PLANO -->
+<h3>Usar plano</h3>
+<form method="POST" action="/usar_plano" class="box">
+  <select name="cliente" required>
+    {% for c in clientes %}
+    <option value="{{ c[0] }}">
+      {{ c[1] }} (Saldo: {{ c[4] }})
+    </option>
+    {% endfor %}
+  </select>
+
+  <select name="servico" required>
+    {% for s in servicos %}
+    <option value="{{ s[0] }}">{{ s[1] }}</option>
+    {% endfor %}
+  </select>
+
+  <button>Usar Plano</button>
+</form>
 </div>
+
 
 <!-- ================= AGENDA ================= -->
 <div id="agenda" class="page hidden">
