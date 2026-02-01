@@ -7,59 +7,67 @@
 </head>
 <body>
 
-<div class="overlay"></div>
-
 <div class="container">
-    <h1>💈 Barbearia</h1>
+<h1>💈 Barbearia</h1>
 
-    <h2>Vender Serviço</h2>
-    <form method="POST" action="/vender" class="form">
-        <select name="cliente" required>
-            <option value="">Cliente</option>
-            {% for c in clientes %}
-            <option value="{{ c[0] }}">{{ c[1] }}</option>
-            {% endfor %}
-        </select>
+<h2>Clientes</h2>
+<form method="POST" action="/add_cliente">
+    <input name="nome" placeholder="Nome" required>
+    <input name="telefone" placeholder="Telefone">
+    <button>Adicionar</button>
+</form>
 
-        <select name="servico" required>
-            <option value="">Serviço</option>
-            {% for s in servicos %}
-            <option value="{{ s[0] }}">{{ s[1] }} - R$ {{ "%.2f"|format(s[2]) }}</option>
-            {% endfor %}
-        </select>
+<h2>Serviços</h2>
+<form method="POST" action="/add_servico">
+    <input name="nome" placeholder="Serviço" required>
+    <input type="number" step="0.01" name="preco" placeholder="Preço" required>
+    <button>Adicionar</button>
+</form>
 
-        <select name="pagamento" required>
-            <option value="">Pagamento</option>
-            <option>Dinheiro</option>
-            <option>Pix</option>
-            <option>Cartão</option>
-        </select>
+<h2>Produtos</h2>
+<form method="POST" action="/add_produto">
+    <input name="nome" placeholder="Produto" required>
+    <input type="number" step="0.01" name="preco" placeholder="Preço" required>
+    <button>Adicionar</button>
+</form>
 
-        <button>Vender</button>
-    </form>
+<h2>Planos</h2>
+<form method="POST" action="/add_plano">
+    <input name="nome" placeholder="Plano" required>
+    <input type="number" step="0.01" name="valor" placeholder="Valor mensal" required>
+    <button>Criar plano</button>
+</form>
 
-    <hr>
-
-    <h2>Resumo do Dia</h2>
-    <ul class="resumo">
-        <li>💵 Dinheiro: <strong>R$ {{ "%.2f"|format(pagamentos["Dinheiro"]) }}</strong></li>
-        <li>📲 Pix: <strong>R$ {{ "%.2f"|format(pagamentos["Pix"]) }}</strong></li>
-        <li>💳 Cartão: <strong>R$ {{ "%.2f"|format(pagamentos["Cartão"]) }}</strong></li>
-    </ul>
-
-    <a href="/exportar_csv" class="btn">📄 Exportar CSV</a>
-
-    <hr>
-
-    <h2>Caixa</h2>
-    <ul class="lista">
-        {% for c in caixa %}
-        <li>
-            {{ c[1] }} — <strong>R$ {{ "%.2f"|format(c[2]) }}</strong> | {{ c[4] }}
-        </li>
+<h2>Ativar Plano</h2>
+<form method="POST" action="/ativar_plano">
+    <select name="cliente" required>
+        {% for c in clientes %}
+        <option value="{{ c[0] }}">{{ c[1] }}</option>
         {% endfor %}
-    </ul>
-</div>
+    </select>
 
+    <select name="plano" required>
+        {% for p in planos %}
+        <option value="{{ p[0] }}">{{ p[1] }} - R$ {{ "%.2f"|format(p[2]) }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="pagamento" required>
+        <option>Dinheiro</option>
+        <option>Pix</option>
+        <option>Cartão</option>
+    </select>
+
+    <button>Ativar</button>
+</form>
+
+<h2>Caixa</h2>
+<ul>
+{% for c in caixa %}
+<li>{{ c[1] }} - R$ {{ "%.2f"|format(c[2]) }} ({{ c[4] }})</li>
+{% endfor %}
+</ul>
+
+</div>
 </body>
 </html>
