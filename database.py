@@ -11,8 +11,7 @@ def criar_tabelas():
     CREATE TABLE IF NOT EXISTS clientes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
-        telefone TEXT,
-        criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
+        telefone TEXT
     )
     """)
 
@@ -21,6 +20,16 @@ def criar_tabelas():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
         preco REAL NOT NULL
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS vendas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cliente_id INTEGER,
+        servico_id INTEGER,
+        valor REAL,
+        data DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
 
