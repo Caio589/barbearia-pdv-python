@@ -10,6 +10,7 @@
 
 <div class="bg"></div>
 
+<!-- SIDEBAR -->
 <div class="sidebar">
   <div class="logo">💈</div>
   <button onclick="showPage('pdv')">💳</button>
@@ -25,92 +26,30 @@
 
 <!-- PDV -->
 <div id="pdv" class="page">
-<h1>PDV</h1>
-
-{% if not aberto %}
-<form method="POST" action="/abrir_caixa" class="box">
-  <input name="saldo" placeholder="Saldo inicial">
-  <button>Abrir Caixa</button>
-</form>
-{% else %}
-<a href="/fechar_caixa" class="btn-danger">Fechar Caixa</a>
-{% endif %}
-
-<form method="POST" action="/venda" class="box">
-  <select name="tipo" id="tipo" onchange="carregarItens()" required>
-    <option value="">Tipo</option>
-    <option value="servico">Serviço</option>
-    <option value="produto">Produto</option>
-  </select>
-
-  <select name="item" id="item" onchange="buscarPreco()" required>
-    <option value="">Selecione</option>
-  </select>
-
-  <input id="valor" placeholder="Valor" disabled>
-
-  <select name="pagamento" id="pagamento" onchange="calcularTroco()">
-    <option>Dinheiro</option>
-    <option>Pix</option>
-    <option>Cartão</option>
-  </select>
-
-  <input id="recebido" placeholder="Recebido" onkeyup="calcularTroco()">
-  <p id="troco"></p>
-
-  <button>Finalizar Venda</button>
-</form>
+  <h1>PDV</h1>
 </div>
 
 <!-- CLIENTES -->
 <div id="clientes" class="page hidden">
-<h1>Clientes</h1>
-<form method="POST" action="/add_cliente" class="box">
-  <input name="nome" placeholder="Nome" required>
-  <input name="telefone" placeholder="Telefone">
-  <button>Salvar</button>
-</form>
-
-<ul class="lista">
-{% for c in clientes %}
-<li>{{ c[1] }} - {{ c[2] }}</li>
-{% endfor %}
-</ul>
+  <h1>Clientes</h1>
 </div>
 
 <!-- SERVIÇOS -->
 <div id="servicos" class="page hidden">
-<h1>Serviços</h1>
-<form method="POST" action="/add_servico" class="box">
-  <input name="nome" placeholder="Serviço" required>
-  <input name="preco" placeholder="Preço" required>
-  <button>Salvar</button>
-</form>
-
-<ul class="lista">
-{% for s in servicos %}
-<li>{{ s[1] }} - R$ {{ "%.2f"|format(s[2]) }}</li>
-{% endfor %}
-</ul>
+  <h1>Serviços</h1>
 </div>
 
 <!-- PRODUTOS -->
 <div id="produtos" class="page hidden">
-<h1>Produtos</h1>
-<form method="POST" action="/add_produto" class="box">
-  <input name="nome" placeholder="Produto" required>
-  <input name="preco" placeholder="Preço" required>
-  <button>Salvar</button>
-</form>
-
-<ul class="lista">
-{% for p in produtos %}
-<li>{{ p[1] }} - R$ {{ "%.2f"|format(p[2]) }}</li>
-{% endfor %}
-</ul>
+  <h1>Produtos</h1>
 </div>
 
-<!-- AGENDA -->
+<!-- PLANOS -->
+<div id="planos" class="page hidden">
+  <h1>Planos</h1>
+</div>
+
+<!-- ✅ AGENDA -->
 <div id="agenda" class="page hidden">
 <h1>Agenda</h1>
 
@@ -145,50 +84,9 @@
 
 <!-- RELATÓRIO -->
 <div id="relatorio" class="page hidden">
-<h1>Relatório Mensal</h1>
-<p>💵 Dinheiro: R$ {{ "%.2f"|format(total_dinheiro) }}</p>
-<p>📲 Pix: R$ {{ "%.2f"|format(total_pix) }}</p>
-<p>💳 Cartão: R$ {{ "%.2f"|format(total_cartao) }}</p>
-<h2>Total: R$ {{ "%.2f"|format(total_mes) }}</h2>
-<a href="/relatorio_pdf" target="_blank" class="btn">📄 PDF</a>
+  <h1>Relatório</h1>
 </div>
 
 </div>
-
-<script>
-const servicos = {{ servicos|tojson }};
-const produtos = {{ produtos|tojson }};
-
-function carregarItens(){
-  const tipo = document.getElementById("tipo").value;
-  const item = document.getElementById("item");
-  item.innerHTML = '<option value="">Selecione</option>';
-
-  (tipo === "servico" ? servicos : produtos).forEach(i => {
-    const opt = document.createElement("option");
-    opt.value = i[0];
-    opt.text = i[1];
-    item.appendChild(opt);
-  });
-}
-
-function buscarPreco(){
-  const tipo = document.getElementById("tipo").value;
-  const id = document.getElementById("item").value;
-  if(!tipo || !id) return;
-
-  fetch(`/preco/${tipo}/${id}`)
-    .then(r => r.json())
-    .then(p => document.getElementById("valor").value = "R$ " + p.toFixed(2));
-}
-
-function calcularTroco(){
-  const recebido = parseFloat(document.getElementById("recebido").value || 0);
-  const valor = parseFloat(document.getElementById("valor").value.replace("R$","") || 0);
-  document.getElementById("troco").innerText =
-    recebido >= valor ? "Troco: R$ " + (recebido - valor).toFixed(2) : "";
-}
-</script>
-
 </body>
 </html>
