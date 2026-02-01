@@ -1,7 +1,7 @@
 import sqlite3
 
 def conectar():
-    return sqlite3.connect("barbearia.db")
+    return sqlite3.connect("barbearia.db", check_same_thread=False)
 
 def criar_tabelas():
     conn = conectar()
@@ -42,6 +42,10 @@ def criar_tabelas():
     )
     """)
 
-    c.execute("INSERT OR IGNORE INTO caixa_status (id, aberto, saldo_inicial) VALUES (1, 0, 0)")
+    c.execute("""
+        INSERT OR IGNORE INTO caixa_status (id, aberto, saldo_inicial)
+        VALUES (1, 0, 0)
+    """)
+
     conn.commit()
     conn.close()
