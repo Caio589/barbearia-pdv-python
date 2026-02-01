@@ -39,7 +39,7 @@ def home():
         caixa=caixa
     )
 
-# -------- CLIENTES --------
+# CLIENTES
 @app.route("/add_cliente", methods=["POST"])
 def add_cliente():
     conn = conectar()
@@ -52,7 +52,7 @@ def add_cliente():
     conn.close()
     return redirect("/")
 
-# -------- SERVIÇOS --------
+# SERVIÇOS
 @app.route("/add_servico", methods=["POST"])
 def add_servico():
     conn = conectar()
@@ -65,7 +65,7 @@ def add_servico():
     conn.close()
     return redirect("/")
 
-# -------- PRODUTOS --------
+# PRODUTOS
 @app.route("/add_produto", methods=["POST"])
 def add_produto():
     conn = conectar()
@@ -78,7 +78,7 @@ def add_produto():
     conn.close()
     return redirect("/")
 
-# -------- PLANOS --------
+# PLANOS
 @app.route("/add_plano", methods=["POST"])
 def add_plano():
     conn = conectar()
@@ -115,6 +115,43 @@ def ativar_plano():
         INSERT INTO caixa (descricao, valor, tipo, pagamento)
         VALUES (?, ?, 'entrada', ?)
     """, (f"Plano {plano[0]} - {cliente[0]}", plano[1], pagamento))
+
+    conn.commit()
+    conn.close()
+    return redirect("/")
+
+# USO DO PLANO (SEM COBRAR)
+@app.route("/usar_plano", methods=["POST"])
+def usar_plano():
+    cliente_id = request.form["cliente"]
+    servico_id = request.form["servico"]
+
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO uso_plano (cliente_id, servico_id) VALUES (?,?)",
+        (cliente_id, servico_id)
+    )
+    conn.commit()
+    conn.close()
+    return redirect("/")
+
+# VENDA DE PRODUTO
+@app.route("/vender_produto", methods=["POST"])
+def vender_produto():
+    produto_id = request.form["produto"]
+    pagamento = request.form["pagamento"]
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT nome, preco FROM produtos WHERE id=?", (produto_id,))
+    produto = cursor.fetchone()
+
+    cursor.execute("""
+        INSERT INTO caixa (descricao, valor, tipo, pagamento)
+        VALUES (?, ?, 'entrada', ?)
+    """, (f"Venda produto: {produto[0]}", produto[1], pagamento))
 
     conn.commit()
     conn.close()
