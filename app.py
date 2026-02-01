@@ -1,98 +1,67 @@
-from flask import Flask, render_template, request, redirect
-from database import criar_tabelas, conectar
+import sqlite3
 
-app = Flask(__name__)
-criar_tabelas()
+def conectar():
+    return sqlite3.connect("barbearia.db", check_same_thread=False)
 
-@app.route("/")
-def home():
+def criar_tabelas():
     con = conectar()
     c = con.cursor()
 
-    c.execute("SELECT * FROM caixa ORDER BY id DESC")
-    caixa = c.fetchall()
-
-    c.execute("SELECT * FROM servicos")
-    servicos = c.fetchall()
-
-    c.execute("SELECT * FROM produtos")
-    produtos = c.fetchall()
-
-    c.execute("SELECT aberto FROM caixa_status WHERE id=1")
-    aberto = c.fetchone()[0]
-
-    con.close()
-
-    return render_template(
-        "index.html",
-        caixa=caixa,
-        servicos=servicos,
-        produtos=produtos,
-        aberto=aberto
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS clientes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT,
+        telefone TEXT
     )
-
-@app.route("/abrir_caixa", methods=["POST"])
-def abrir_caixa():
-    try:
-        saldo = float(request.form["saldo"].replace(",", "."))
-    except:
-        saldo = 0.0
-
-    con = conectar()
-    c = con.cursor()
-
-    c.execute("UPDATE caixa_status SET aberto=1, saldo_inicial=?", (saldo,))
-    c.execute("""
-        INSERT INTO caixa (descricao, valor, tipo, pagamento)
-        VALUES ('Abertura de Caixa', ?, 'entrada', 'Dinheiro')
-    """, (saldo,))
-
-    con.commit()
-    con.close()
-    return redirect("/")
-
-@app.route("/fechar_caixa")
-def fechar_caixa():
-    con = conectar()
-    c = con.cursor()
-    c.execute("UPDATE caixa_status SET aberto=0")
-    con.commit()
-    con.close()
-    return redirect("/")
-
-@app.route("/venda", methods=["POST"])
-def venda():
-    descricao = request.form.get("descricao", "").strip()
-    pagamento = request.form.get("pagamento", "Dinheiro")
-
-    # valida valor
-    try:
-        valor = float(request.form.get("valor", "0").replace(",", "."))
-    except:
-        return redirect("/")
-
-    if valor <= 0 or descricao == "":
-        return redirect("/")
-
-    con = conectar()
-    c = con.cursor()
-
-    # verifica se caixa está aberto
-    c.execute("SELECT aberto FROM caixa_status WHERE id=1")
-    aberto = c.fetchone()[0]
-
-    if aberto != 1:
-        con.close()
-        return redirect("/")
+    """)
 
     c.execute("""
-        INSERT INTO caixa (descricao, valor, tipo, pagamento)
-        VALUES (?, ?, 'entrada', ?)
-    """, (descricao, valor, pagamento))
+    CREATE TABLE IF NOT EXISTS servicos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT,
+        preco REAL
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS produtos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT,
+        preco REAL
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS planos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT,
+        valor REAL
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS caixa_status (
+        id INTEGER PRIMARY KEY,
+        aberto INTEGER,
+        saldo_inicial REAL
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS caixa (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        descricao TEXT,
+        valor REAL,
+        tipo TEXT,
+        pagamento TEXT,
+        data DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    c.execute("""
+        INSERT OR IGNORE INTO caixa_status (id, aberto, saldo_inicial)
+        VALUES (1, 0, 0)
+    """)
 
     con.commit()
     con.close()
-    return redirect("/")
-
-if __name__ == "__main__":
-    app.run(debug=True)
