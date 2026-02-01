@@ -1,9 +1,14 @@
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import Flask, render_template, request, redirect, jsonify, send_file
 from database import criar_tabelas, conectar
+from datetime import datetime
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+import io
 
 app = Flask(__name__)
 criar_tabelas()
 
+# ---------------- HOME ----------------
 @app.route("/")
 def home():
     con = conectar()
@@ -18,8 +23,32 @@ def home():
     c.execute("SELECT * FROM produtos")
     produtos = c.fetchall()
 
+    c.execute("SELECT * FROM planos")
+    planos = c.fetchall()
+
+    c.execute("SELECT * FROM caixa ORDER BY id DESC")
+    caixa = c.fetchall()
+
     c.execute("SELECT aberto FROM caixa_status WHERE id=1")
     aberto = c.fetchone()[0]
+
+    # -------- RELATÓRIO MENSAL --------
+    mes = datetime.now().strftime("%Y-%m")
+
+    def total_pagamento(pag):
+        c.execute("""
+            SELECT IFNULL(SUM(valor),0)
+            FROM caixa
+            WHERE tipo='entrada'
+              AND pagamento=?
+              AND strftime('%Y-%m', data)=?
+        """, (pag, mes))
+        return c.fetchone()[0]
+
+    total_dinheiro = total_pagamento("Dinheiro")
+    total_pix = total_pagamento("Pix")
+    total_cartao = total_pagamento("Cartão")
+    total_mes = total_dinheiro + total_pix + total_cartao
 
     con.close()
 
@@ -28,20 +57,32 @@ def home():
         clientes=clientes,
         servicos=servicos,
         produtos=produtos,
-        aberto=aberto
+        planos=planos,
+        caixa=caixa,
+        aberto=aberto,
+        total_dinheiro=total_dinheiro,
+        total_pix=total_pix,
+        total_cartao=total_cartao,
+        total_mes=total_mes
     )
 
-# -------- CAIXA --------
+# ---------------- CAIXA ----------------
 @app.route("/abrir_caixa", methods=["POST"])
 def abrir_caixa():
-    saldo = float(request.form.get("saldo", "0").replace(",", "."))
+    try:
+        saldo = float(request.form.get("saldo", "0").replace(",", "."))
+    except:
+        saldo = 0.0
+
     con = conectar()
     c = con.cursor()
+
     c.execute("UPDATE caixa_status SET aberto=1, saldo_inicial=?", (saldo,))
     c.execute("""
         INSERT INTO caixa (descricao, valor, tipo, pagamento)
         VALUES ('Abertura de Caixa', ?, 'entrada', 'Dinheiro')
     """, (saldo,))
+
     con.commit()
     con.close()
     return redirect("/")
@@ -54,31 +95,35 @@ def fechar_caixa():
     con.close()
     return redirect("/")
 
-# -------- API PREÇO --------
-@app.route("/preco/<tipo>/<int:id>")
-def preco(tipo, id):
+# ---------------- API PREÇO ----------------
+@app.route("/preco/<tipo>/<int:item_id>")
+def preco(tipo, item_id):
     con = conectar()
     c = con.cursor()
 
     if tipo == "servico":
-        c.execute("SELECT preco FROM servicos WHERE id=?", (id,))
+        c.execute("SELECT preco FROM servicos WHERE id=?", (item_id,))
     else:
-        c.execute("SELECT preco FROM produtos WHERE id=?", (id,))
+        c.execute("SELECT preco FROM produtos WHERE id=?", (item_id,))
 
     preco = c.fetchone()[0]
     con.close()
     return jsonify(preco)
 
-# -------- VENDA --------
+# ---------------- VENDA INTELIGENTE ----------------
 @app.route("/venda", methods=["POST"])
 def venda():
-    tipo = request.form["tipo"]
-    item_id = int(request.form["item"])
-    pagamento = request.form["pagamento"]
+    tipo = request.form.get("tipo")
+    item_id = request.form.get("item")
+    pagamento = request.form.get("pagamento", "Dinheiro")
+
+    if not tipo or not item_id:
+        return redirect("/")
 
     con = conectar()
     c = con.cursor()
 
+    # caixa precisa estar aberto
     c.execute("SELECT aberto FROM caixa_status WHERE id=1")
     if c.fetchone()[0] != 1:
         con.close()
@@ -89,7 +134,12 @@ def venda():
     else:
         c.execute("SELECT nome, preco FROM produtos WHERE id=?", (item_id,))
 
-    nome, preco = c.fetchone()
+    item = c.fetchone()
+    if not item:
+        con.close()
+        return redirect("/")
+
+    nome, preco = item
 
     c.execute("""
         INSERT INTO caixa (descricao, valor, tipo, pagamento)
@@ -99,3 +149,116 @@ def venda():
     con.commit()
     con.close()
     return redirect("/")
+
+# ---------------- CADASTROS ----------------
+@app.route("/add_cliente", methods=["POST"])
+def add_cliente():
+    con = conectar()
+    con.cursor().execute(
+        "INSERT INTO clientes (nome, telefone) VALUES (?,?)",
+        (request.form["nome"], request.form["telefone"])
+    )
+    con.commit()
+    con.close()
+    return redirect("/")
+
+@app.route("/add_servico", methods=["POST"])
+def add_servico():
+    con = conectar()
+    con.cursor().execute(
+        "INSERT INTO servicos (nome, preco) VALUES (?,?)",
+        (request.form["nome"], request.form["preco"].replace(",", "."))
+    )
+    con.commit()
+    con.close()
+    return redirect("/")
+
+@app.route("/add_produto", methods=["POST"])
+def add_produto():
+    con = conectar()
+    con.cursor().execute(
+        "INSERT INTO produtos (nome, preco) VALUES (?,?)",
+        (request.form["nome"], request.form["preco"].replace(",", "."))
+    )
+    con.commit()
+    con.close()
+    return redirect("/")
+
+@app.route("/add_plano", methods=["POST"])
+def add_plano():
+    con = conectar()
+    con.cursor().execute(
+        "INSERT INTO planos (nome, valor) VALUES (?,?)",
+        (request.form["nome"], request.form["valor"].replace(",", "."))
+    )
+    con.commit()
+    con.close()
+    return redirect("/")
+
+# ---------------- PDF MENSAL ----------------
+@app.route("/relatorio_pdf")
+def relatorio_pdf():
+    con = conectar()
+    c = con.cursor()
+
+    mes = datetime.now().strftime("%Y-%m")
+
+    c.execute("""
+        SELECT descricao, valor, pagamento, data
+        FROM caixa
+        WHERE tipo='entrada'
+        AND strftime('%Y-%m', data)=?
+    """, (mes,))
+    dados = c.fetchall()
+
+    c.execute("""
+        SELECT pagamento, SUM(valor)
+        FROM caixa
+        WHERE tipo='entrada'
+        AND strftime('%Y-%m', data)=?
+        GROUP BY pagamento
+    """, (mes,))
+    totais = c.fetchall()
+
+    con.close()
+
+    buffer = io.BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    largura, altura = A4
+
+    pdf.setFont("Helvetica-Bold", 16)
+    pdf.drawString(50, altura - 50, "Relatório Mensal - Barbearia")
+
+    y = altura - 90
+    pdf.setFont("Helvetica", 10)
+
+    for d in dados:
+        pdf.drawString(50, y, f"{d[3][:10]} | {d[0]} | R$ {d[1]:.2f} | {d[2]}")
+        y -= 14
+        if y < 40:
+            pdf.showPage()
+            y = altura - 50
+
+    pdf.showPage()
+    pdf.setFont("Helvetica-Bold", 14)
+    pdf.drawString(50, altura - 50, "Totais por pagamento")
+
+    y = altura - 90
+    pdf.setFont("Helvetica", 12)
+    for t in totais:
+        pdf.drawString(50, y, f"{t[0]}: R$ {t[1]:.2f}")
+        y -= 20
+
+    pdf.save()
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="relatorio_mensal.pdf",
+        mimetype="application/pdf"
+    )
+
+# ---------------- START ----------------
+if __name__ == "__main__":
+    app.run(debug=True)
