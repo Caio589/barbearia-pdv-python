@@ -1,10 +1,15 @@
 import psycopg2
+import psycopg2.extras
 import os
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 def conectar():
-    return psycopg2.connect(DATABASE_URL, sslmode="require")
+    return psycopg2.connect(
+        DATABASE_URL,
+        sslmode="require",
+        cursor_factory=psycopg2.extras.RealDictCursor
+    )
 
 def criar_tabelas():
     con = conectar()
