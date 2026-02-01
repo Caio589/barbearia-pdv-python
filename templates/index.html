@@ -10,38 +10,50 @@
 <div class="container">
     <h1>💈 Barbearia</h1>
 
-    <!-- CLIENTES -->
-    <h2>Clientes</h2>
-    <form method="POST" action="/add_cliente" class="form">
-        <input type="text" name="nome" placeholder="Nome do cliente" required>
-        <input type="text" name="telefone" placeholder="Telefone">
-        <button type="submit">Adicionar</button>
-    </form>
+    <h2>Vender Serviço</h2>
+    <form method="POST" action="/vender" class="form">
+        <select name="cliente" required>
+            <option value="">Cliente</option>
+            {% for c in clientes %}
+            <option value="{{ c[0] }}">{{ c[1] }}</option>
+            {% endfor %}
+        </select>
 
-    <ul class="lista">
-        {% for c in clientes %}
-        <li>
-            {{ c[1] }} - {{ c[2] }}
-            <a href="/delete_cliente/{{ c[0] }}">❌</a>
-        </li>
-        {% endfor %}
-    </ul>
+        <select name="servico" required>
+            <option value="">Serviço</option>
+            {% for s in servicos %}
+            <option value="{{ s[0] }}">{{ s[1] }} - R$ {{ "%.2f"|format(s[2]) }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="pagamento" required>
+            <option value="">Pagamento</option>
+            <option>Dinheiro</option>
+            <option>Pix</option>
+            <option>Cartão</option>
+        </select>
+
+        <button>Vender</button>
+    </form>
 
     <hr>
 
-    <!-- SERVIÇOS -->
-    <h2>Serviços</h2>
-    <form method="POST" action="/add_servico" class="form">
-        <input type="text" name="nome" placeholder="Nome do serviço" required>
-        <input type="number" step="0.01" name="preco" placeholder="Preço (R$)" required>
-        <button type="submit">Adicionar</button>
-    </form>
+    <h2>Resumo do Dia</h2>
+    <ul>
+        <li>💵 Dinheiro: R$ {{ "%.2f"|format(pagamentos["Dinheiro"]) }}</li>
+        <li>📲 Pix: R$ {{ "%.2f"|format(pagamentos["Pix"]) }}</li>
+        <li>💳 Cartão: R$ {{ "%.2f"|format(pagamentos["Cartão"]) }}</li>
+    </ul>
 
+    <a href="/exportar_csv" class="btn">📄 Exportar CSV</a>
+
+    <hr>
+
+    <h2>Caixa</h2>
     <ul class="lista">
-        {% for s in servicos %}
+        {% for c in caixa %}
         <li>
-            {{ s[1] }} — R$ {{ "%.2f"|format(s[2]) }}
-            <a href="/delete_servico/{{ s[0] }}">❌</a>
+            {{ c[1] }} — R$ {{ "%.2f"|format(c[2]) }} | {{ c[4] }}
         </li>
         {% endfor %}
     </ul>
