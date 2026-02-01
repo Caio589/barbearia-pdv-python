@@ -350,3 +350,39 @@ def ativar_plano():
     con.commit()
     con.close()
     return redirect("/")
+
+@app.route("/usar_plano", methods=["POST"])
+def usar_plano():
+    cliente_id = request.form.get("cliente")
+    servico_id = request.form.get("servico")
+
+    if not cliente_id or not servico_id:
+        return redirect("/")
+
+    con = conectar()
+    c = con.cursor()
+
+    # verifica saldo do cliente
+    c.execute("SELECT saldo_plano FROM clientes WHERE id=?", (cliente_id,))
+    row = c.fetchone()
+
+    if not row or row[0] <= 0:
+        con.close()
+        return redirect("/")
+
+    # registra uso do plano
+    c.execute("""
+        INSERT INTO uso_plano (cliente_id, servico_id)
+        VALUES (?,?)
+    """, (cliente_id, servico_id))
+
+    # abate saldo
+    c.execute("""
+        UPDATE clientes
+        SET saldo_plano = saldo_plano - 1
+        WHERE id=?
+    """, (cliente_id,))
+
+    con.commit()
+    con.close()
+    return redirect("/")
