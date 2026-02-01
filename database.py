@@ -7,6 +7,7 @@ def criar_tabelas():
     con = conectar()
     c = con.cursor()
 
+    # CLIENTES COM SALDO DE PLANO
     c.execute("""
     CREATE TABLE IF NOT EXISTS clientes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,6 +34,7 @@ def criar_tabelas():
     )
     """)
 
+    # PLANO COM LIMITE
     c.execute("""
     CREATE TABLE IF NOT EXISTS planos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,14 +44,7 @@ def criar_tabelas():
     )
     """)
 
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS plano_servicos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        plano_id INTEGER,
-        servico_id INTEGER
-    )
-    """)
-
+    # HISTÓRICO DE USO DO PLANO
     c.execute("""
     CREATE TABLE IF NOT EXISTS uso_plano (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
