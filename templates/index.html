@@ -1,27 +1,61 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
+  <meta charset="UTF-8">
   <title>Barbearia PDV</title>
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 
-<h1>💈 Barbearia PDV</h1>
+<div class="app">
 
-<section>
-  <h2>Clientes</h2>
-  <input id="cliente">
-  <button onclick="addCliente()">Adicionar</button>
-</section>
+  <!-- MENU LATERAL -->
+  <aside class="sidebar">
+    <h2>💈</h2>
+    <button onclick="mostrar('clientes')"><i class="fas fa-user"></i></button>
+    <button onclick="mostrar('agenda')"><i class="fas fa-calendar"></i></button>
+    <button onclick="mostrar('caixa')"><i class="fas fa-cash-register"></i></button>
+    <button onclick="mostrar('planos')"><i class="fas fa-id-card"></i></button>
+  </aside>
 
-<section>
-  <h2>Agenda</h2>
-  <input placeholder="Cliente" id="ag_cliente">
-  <input placeholder="Serviço" id="ag_servico">
-  <input type="date" id="ag_data">
-  <input type="time" id="ag_hora">
-  <button onclick="agendar()">Agendar</button>
-</section>
+  <!-- CONTEÚDO -->
+  <main class="conteudo">
+
+    <!-- CLIENTES -->
+    <section id="clientes" class="aba">
+      <h1>Clientes</h1>
+      <input id="cliente" placeholder="Nome do cliente">
+      <button onclick="addCliente()">Adicionar</button>
+      <ul id="listaClientes"></ul>
+    </section>
+
+    <!-- AGENDA -->
+    <section id="agenda" class="aba">
+      <h1>Agenda</h1>
+      <input id="ag_cliente" placeholder="Cliente">
+      <input id="ag_servico" placeholder="Serviço">
+      <input type="date" id="ag_data">
+      <input type="time" id="ag_hora">
+      <button onclick="agendar()">Agendar</button>
+      <ul id="listaAgenda"></ul>
+    </section>
+
+    <!-- CAIXA -->
+    <section id="caixa" class="aba">
+      <h1>Caixa</h1>
+      <button onclick="abrirCaixa()">Abrir Caixa</button>
+      <button onclick="fecharCaixa()">Fechar Caixa</button>
+    </section>
+
+    <!-- PLANOS -->
+    <section id="planos" class="aba">
+      <h1>Planos</h1>
+      <p>Gestão de planos (próxima etapa)</p>
+    </section>
+
+  </main>
+</div>
 
 <script src="/static/script.js"></script>
 </body>
