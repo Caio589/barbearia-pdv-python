@@ -7,7 +7,6 @@ def criar_tabelas():
     conn = conectar()
     cursor = conn.cursor()
 
-    # CLIENTES
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS clientes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -17,7 +16,6 @@ def criar_tabelas():
     )
     """)
 
-    # SERVIÇOS
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS servicos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,7 +24,6 @@ def criar_tabelas():
     )
     """)
 
-    # PRODUTOS
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS produtos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,7 +32,6 @@ def criar_tabelas():
     )
     """)
 
-    # PLANOS
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS planos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,7 +40,6 @@ def criar_tabelas():
     )
     """)
 
-    # RELAÇÃO PLANO x SERVIÇO
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS plano_servicos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,7 +48,6 @@ def criar_tabelas():
     )
     """)
 
-    # CAIXA
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS caixa (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
