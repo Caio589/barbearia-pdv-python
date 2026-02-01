@@ -283,3 +283,31 @@ def relatorio_pdf():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+@app.route("/add_plano", methods=["POST"])
+def add_plano():
+    nome = request.form.get("nome")
+    valor = request.form.get("valor")
+    limite = request.form.get("limite", "0")
+
+    if not nome or not valor:
+        return redirect("/")
+
+    try:
+        valor = float(valor.replace(",", "."))
+    except:
+        valor = 0.0
+
+    try:
+        limite = int(limite)
+    except:
+        limite = 0
+
+    con = conectar()
+    con.cursor().execute(
+        "INSERT INTO planos (nome, valor, limite) VALUES (?,?,?)",
+        (nome, valor, limite)
+    )
+    con.commit()
+    con.close()
+    return redirect("/")
