@@ -1,161 +1,62 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, jsonify
 import sqlite3
 from database import criar_tabelas
 
 app = Flask(__name__)
 criar_tabelas()
 
-def conectar():
+def db():
     return sqlite3.connect("barbearia.db")
 
 @app.route("/")
 def home():
-    conn = conectar()
-    cursor = conn.cursor()
+    con = db()
+    c = con.cursor()
 
-    cursor.execute("SELECT * FROM clientes")
-    clientes = cursor.fetchall()
+    c.execute("SELECT * FROM caixa ORDER BY id DESC")
+    caixa = c.fetchall()
 
-    cursor.execute("SELECT * FROM servicos")
-    servicos = cursor.fetchall()
+    c.execute("SELECT * FROM servicos")
+    servicos = c.fetchall()
 
-    cursor.execute("SELECT * FROM produtos")
-    produtos = cursor.fetchall()
+    c.execute("SELECT * FROM produtos")
+    produtos = c.fetchall()
 
-    cursor.execute("SELECT * FROM planos")
-    planos = cursor.fetchall()
+    c.execute("SELECT aberto FROM caixa_status WHERE id=1")
+    aberto = c.fetchone()[0]
 
-    cursor.execute("SELECT * FROM caixa ORDER BY id DESC")
-    caixa = cursor.fetchall()
+    con.close()
 
-    conn.close()
+    return render_template("index.html", caixa=caixa, servicos=servicos, produtos=produtos, aberto=aberto)
 
-    return render_template(
-        "index.html",
-        clientes=clientes,
-        servicos=servicos,
-        produtos=produtos,
-        planos=planos,
-        caixa=caixa
-    )
-
-# CLIENTES
-@app.route("/add_cliente", methods=["POST"])
-def add_cliente():
-    conn = conectar()
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO clientes (nome, telefone) VALUES (?,?)",
-        (request.form["nome"], request.form["telefone"])
-    )
-    conn.commit()
-    conn.close()
+@app.route("/abrir_caixa", methods=["POST"])
+def abrir_caixa():
+    saldo = request.form["saldo"]
+    con = db()
+    c = con.cursor()
+    c.execute("UPDATE caixa_status SET aberto=1, saldo_inicial=?", (saldo,))
+    c.execute("INSERT INTO caixa (descricao, valor, tipo) VALUES ('Abertura de Caixa', ?, 'entrada')", (saldo,))
+    con.commit()
+    con.close()
     return redirect("/")
 
-# SERVIÇOS
-@app.route("/add_servico", methods=["POST"])
-def add_servico():
-    conn = conectar()
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO servicos (nome, preco) VALUES (?,?)",
-        (request.form["nome"], request.form["preco"])
-    )
-    conn.commit()
-    conn.close()
+@app.route("/fechar_caixa")
+def fechar_caixa():
+    con = db()
+    c = con.cursor()
+    c.execute("UPDATE caixa_status SET aberto=0")
+    con.commit()
+    con.close()
     return redirect("/")
 
-# PRODUTOS
-@app.route("/add_produto", methods=["POST"])
-def add_produto():
-    conn = conectar()
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO produtos (nome, preco) VALUES (?,?)",
-        (request.form["nome"], request.form["preco"])
-    )
-    conn.commit()
-    conn.close()
-    return redirect("/")
-
-# PLANOS
-@app.route("/add_plano", methods=["POST"])
-def add_plano():
-    conn = conectar()
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO planos (nome, valor) VALUES (?,?)",
-        (request.form["nome"], request.form["valor"])
-    )
-    conn.commit()
-    conn.close()
-    return redirect("/")
-
-@app.route("/ativar_plano", methods=["POST"])
-def ativar_plano():
-    cliente_id = request.form["cliente"]
-    plano_id = request.form["plano"]
+@app.route("/venda", methods=["POST"])
+def venda():
+    desc = request.form["descricao"]
+    valor = float(request.form["valor"])
     pagamento = request.form["pagamento"]
-
-    conn = conectar()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT nome, valor FROM planos WHERE id=?", (plano_id,))
-    plano = cursor.fetchone()
-
-    cursor.execute("SELECT nome FROM clientes WHERE id=?", (cliente_id,))
-    cliente = cursor.fetchone()
-
-    cursor.execute(
-        "UPDATE clientes SET plano_id=? WHERE id=?",
-        (plano_id, cliente_id)
-    )
-
-    cursor.execute("""
-        INSERT INTO caixa (descricao, valor, tipo, pagamento)
-        VALUES (?, ?, 'entrada', ?)
-    """, (f"Plano {plano[0]} - {cliente[0]}", plano[1], pagamento))
-
-    conn.commit()
-    conn.close()
+    con = db()
+    c = con.cursor()
+    c.execute("INSERT INTO caixa (descricao, valor, tipo, pagamento) VALUES (?, ?, 'entrada', ?)", (desc, valor, pagamento))
+    con.commit()
+    con.close()
     return redirect("/")
-
-# USO DO PLANO (SEM COBRAR)
-@app.route("/usar_plano", methods=["POST"])
-def usar_plano():
-    cliente_id = request.form["cliente"]
-    servico_id = request.form["servico"]
-
-    conn = conectar()
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO uso_plano (cliente_id, servico_id) VALUES (?,?)",
-        (cliente_id, servico_id)
-    )
-    conn.commit()
-    conn.close()
-    return redirect("/")
-
-# VENDA DE PRODUTO
-@app.route("/vender_produto", methods=["POST"])
-def vender_produto():
-    produto_id = request.form["produto"]
-    pagamento = request.form["pagamento"]
-
-    conn = conectar()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT nome, preco FROM produtos WHERE id=?", (produto_id,))
-    produto = cursor.fetchone()
-
-    cursor.execute("""
-        INSERT INTO caixa (descricao, valor, tipo, pagamento)
-        VALUES (?, ?, 'entrada', ?)
-    """, (f"Venda produto: {produto[0]}", produto[1], pagamento))
-
-    conn.commit()
-    conn.close()
-    return redirect("/")
-
-if __name__ == "__main__":
-    app.run(debug=True)
