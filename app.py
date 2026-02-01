@@ -33,7 +33,11 @@ def home():
 
 @app.route("/abrir_caixa", methods=["POST"])
 def abrir_caixa():
-    saldo = float(request.form["saldo"])
+    try:
+        saldo = float(request.form["saldo"].replace(",", "."))
+    except:
+        saldo = 0.0
+
     con = conectar()
     c = con.cursor()
 
@@ -58,12 +62,28 @@ def fechar_caixa():
 
 @app.route("/venda", methods=["POST"])
 def venda():
-    descricao = request.form["descricao"]
-    valor = float(request.form["valor"])
-    pagamento = request.form["pagamento"]
+    descricao = request.form.get("descricao", "").strip()
+    pagamento = request.form.get("pagamento", "Dinheiro")
+
+    # valida valor
+    try:
+        valor = float(request.form.get("valor", "0").replace(",", "."))
+    except:
+        return redirect("/")
+
+    if valor <= 0 or descricao == "":
+        return redirect("/")
 
     con = conectar()
     c = con.cursor()
+
+    # verifica se caixa está aberto
+    c.execute("SELECT aberto FROM caixa_status WHERE id=1")
+    aberto = c.fetchone()[0]
+
+    if aberto != 1:
+        con.close()
+        return redirect("/")
 
     c.execute("""
         INSERT INTO caixa (descricao, valor, tipo, pagamento)
