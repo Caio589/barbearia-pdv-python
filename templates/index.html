@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Barbearia</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
@@ -40,31 +40,30 @@
 
 <h2>Ativar Plano</h2>
 <form method="POST" action="/ativar_plano">
-    <select name="cliente" required>
-        {% for c in clientes %}
-        <option value="{{ c[0] }}">{{ c[1] }}</option>
-        {% endfor %}
-    </select>
-
-    <select name="plano" required>
-        {% for p in planos %}
-        <option value="{{ p[0] }}">{{ p[1] }} - R$ {{ "%.2f"|format(p[2]) }}</option>
-        {% endfor %}
-    </select>
-
-    <select name="pagamento" required>
-        <option>Dinheiro</option>
-        <option>Pix</option>
-        <option>Cartão</option>
-    </select>
-
+    <select name="cliente">{% for c in clientes %}<option value="{{c[0]}}">{{c[1]}}</option>{% endfor %}</select>
+    <select name="plano">{% for p in planos %}<option value="{{p[0]}}">{{p[1]}}</option>{% endfor %}</select>
+    <select name="pagamento"><option>Dinheiro</option><option>Pix</option><option>Cartão</option></select>
     <button>Ativar</button>
+</form>
+
+<h2>Usar Plano</h2>
+<form method="POST" action="/usar_plano">
+    <select name="cliente">{% for c in clientes %}<option value="{{c[0]}}">{{c[1]}}</option>{% endfor %}</select>
+    <select name="servico">{% for s in servicos %}<option value="{{s[0]}}">{{s[1]}}</option>{% endfor %}</select>
+    <button>Registrar uso</button>
+</form>
+
+<h2>Venda de Produto</h2>
+<form method="POST" action="/vender_produto">
+    <select name="produto">{% for p in produtos %}<option value="{{p[0]}}">{{p[1]}}</option>{% endfor %}</select>
+    <select name="pagamento"><option>Dinheiro</option><option>Pix</option><option>Cartão</option></select>
+    <button>Vender</button>
 </form>
 
 <h2>Caixa</h2>
 <ul>
 {% for c in caixa %}
-<li>{{ c[1] }} - R$ {{ "%.2f"|format(c[2]) }} ({{ c[4] }})</li>
+<li>{{ c[1] }} — R$ {{ "%.2f"|format(c[2]) }} ({{ c[4] }})</li>
 {% endfor %}
 </ul>
 
