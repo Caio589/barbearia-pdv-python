@@ -2,22 +2,31 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Barbearia - Sistema</title>
+    <title>Barbearia</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-    <div class="container">
-        <h1>💈 Sistema de Barbearia</h1>
-        <p>Sistema de gestão para barbearias e salões</p>
+<div class="container">
+    <h1>💈 Barbearia</h1>
 
-        <div class="cards">
-            <div class="card">Clientes</div>
-            <div class="card">Serviços</div>
-            <div class="card">Caixa</div>
-            <div class="card">Planos</div>
-        </div>
-    </div>
+    <form method="POST" action="/add_cliente" class="form">
+        <input type="text" name="nome" placeholder="Nome do cliente" required>
+        <input type="text" name="telefone" placeholder="Telefone">
+        <button type="submit">Adicionar</button>
+    </form>
+
+    <h2>Clientes</h2>
+
+    <ul class="lista">
+        {% for c in clientes %}
+        <li>
+            <span>{{ c[1] }} - {{ c[2] }}</span>
+            <a href="/delete_cliente/{{ c[0] }}">❌</a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
 
 </body>
 </html>
