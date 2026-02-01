@@ -32,6 +32,17 @@ def home():
     c.execute("SELECT aberto FROM caixa_status WHERE id=1")
     aberto = c.fetchone()[0]
 
+    # -------- AGENDA --------
+    c.execute("""
+        SELECT a.id, a.data, a.hora, c.nome, s.nome
+        FROM agenda a
+        JOIN clientes c ON c.id = a.cliente_id
+        JOIN servicos s ON s.id = a.servico_id
+        ORDER BY a.data, a.hora
+    """)
+    agenda = c.fetchall()
+
+    # -------- RELATÓRIO --------
     mes = datetime.now().strftime("%Y-%m")
 
     def total(p):
@@ -39,8 +50,8 @@ def home():
             SELECT IFNULL(SUM(valor),0)
             FROM caixa
             WHERE tipo='entrada'
-            AND pagamento=?
-            AND strftime('%Y-%m', data)=?
+              AND pagamento=?
+              AND strftime('%Y-%m', data)=?
         """, (p, mes))
         return c.fetchone()[0]
 
@@ -58,6 +69,7 @@ def home():
         produtos=produtos,
         planos=planos,
         caixa=caixa,
+        agenda=agenda,
         aberto=aberto,
         total_dinheiro=total_dinheiro,
         total_pix=total_pix,
@@ -132,12 +144,7 @@ def venda():
     else:
         c.execute("SELECT nome, preco FROM produtos WHERE id=?", (item_id,))
 
-    row = c.fetchone()
-    if not row:
-        con.close()
-        return redirect("/")
-
-    nome, preco = row
+    nome, preco = c.fetchone()
 
     c.execute("""
         INSERT INTO caixa (descricao, valor, tipo, pagamento)
@@ -210,101 +217,30 @@ def add_produto():
     con.close()
     return redirect("/")
 
-# ================= PLANOS =================
-@app.route("/add_plano", methods=["POST"])
-def add_plano():
-    nome = request.form.get("nome")
-    valor = request.form.get("valor")
-    limite = request.form.get("limite", "0")
+# ================= AGENDA =================
+@app.route("/add_agenda", methods=["POST"])
+def add_agenda():
+    data = request.form.get("data")
+    hora = request.form.get("hora")
+    cliente = request.form.get("cliente")
+    servico = request.form.get("servico")
 
-    if not nome or not valor:
+    if not data or not hora or not cliente or not servico:
         return redirect("/")
-
-    try:
-        valor = float(valor.replace(",", "."))
-    except:
-        valor = 0.0
-
-    try:
-        limite = int(limite)
-    except:
-        limite = 0
 
     con = conectar()
     con.cursor().execute(
-        "INSERT INTO planos (nome, valor, limite) VALUES (?,?,?)",
-        (nome, valor, limite)
+        "INSERT INTO agenda (data, hora, cliente_id, servico_id) VALUES (?,?,?,?)",
+        (data, hora, cliente, servico)
     )
     con.commit()
     con.close()
     return redirect("/")
 
-@app.route("/ativar_plano", methods=["POST"])
-def ativar_plano():
-    cliente_id = request.form.get("cliente")
-    plano_id = request.form.get("plano")
-    pagamento = request.form.get("pagamento", "Dinheiro")
-
-    if not cliente_id or not plano_id:
-        return redirect("/")
-
+@app.route("/del_agenda/<int:id>")
+def del_agenda(id):
     con = conectar()
-    c = con.cursor()
-
-    c.execute("SELECT nome, valor, limite FROM planos WHERE id=?", (plano_id,))
-    plano = c.fetchone()
-
-    c.execute("SELECT nome FROM clientes WHERE id=?", (cliente_id,))
-    cliente = c.fetchone()
-
-    if not plano or not cliente:
-        con.close()
-        return redirect("/")
-
-    c.execute("""
-        UPDATE clientes
-        SET plano_id=?, saldo_plano=?
-        WHERE id=?
-    """, (plano_id, plano[2], cliente_id))
-
-    c.execute("""
-        INSERT INTO caixa (descricao, valor, tipo, pagamento)
-        VALUES (?, ?, 'entrada', ?)
-    """, (f"Plano {plano[0]} - {cliente[0]}", plano[1], pagamento))
-
-    con.commit()
-    con.close()
-    return redirect("/")
-
-@app.route("/usar_plano", methods=["POST"])
-def usar_plano():
-    cliente_id = request.form.get("cliente")
-    servico_id = request.form.get("servico")
-
-    if not cliente_id or not servico_id:
-        return redirect("/")
-
-    con = conectar()
-    c = con.cursor()
-
-    c.execute("SELECT saldo_plano FROM clientes WHERE id=?", (cliente_id,))
-    row = c.fetchone()
-
-    if not row or row[0] <= 0:
-        con.close()
-        return redirect("/")
-
-    c.execute("""
-        INSERT INTO uso_plano (cliente_id, servico_id)
-        VALUES (?,?)
-    """, (cliente_id, servico_id))
-
-    c.execute("""
-        UPDATE clientes
-        SET saldo_plano = saldo_plano - 1
-        WHERE id=?
-    """, (cliente_id,))
-
+    con.cursor().execute("DELETE FROM agenda WHERE id=?", (id,))
     con.commit()
     con.close()
     return redirect("/")
@@ -347,31 +283,3 @@ def relatorio_pdf():
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-# ================= AGENDA =================
-@app.route("/add_agenda", methods=["POST"])
-def add_agenda():
-    data = request.form.get("data")
-    hora = request.form.get("hora")
-    cliente = request.form.get("cliente")
-    servico = request.form.get("servico")
-
-    if not data or not hora or not cliente or not servico:
-        return redirect("/")
-
-    con = conectar()
-    con.cursor().execute(
-        "INSERT INTO agenda (data, hora, cliente_id, servico_id) VALUES (?,?,?,?)",
-        (data, hora, cliente, servico)
-    )
-    con.commit()
-    con.close()
-    return redirect("/")
-
-@app.route("/del_agenda/<int:id>")
-def del_agenda(id):
-    con = conectar()
-    con.cursor().execute("DELETE FROM agenda WHERE id=?", (id,))
-    con.commit()
-    con.close()
-    return redirect("/")
