@@ -1,72 +1,70 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Barbearia</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<meta charset="UTF-8">
+<title>Barbearia PDV</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="{{ url_for('static', filename='script.js') }}" defer></script>
 </head>
+
 <body>
 
-<div class="container">
-<h1>💈 Barbearia</h1>
+<div class="bg"></div>
 
-<h2>Clientes</h2>
-<form method="POST" action="/add_cliente">
-    <input name="nome" placeholder="Nome" required>
-    <input name="telefone" placeholder="Telefone">
-    <button>Adicionar</button>
-</form>
+<div class="sidebar">
+  <h2>💈</h2>
+  <button onclick="show('pdv')">💳 PDV</button>
+  <button onclick="show('servicos')">✂️ Serviços</button>
+  <button onclick="show('produtos')">🧴 Produtos</button>
+  <button onclick="show('caixa')">📊 Caixa</button>
+</div>
 
-<h2>Serviços</h2>
-<form method="POST" action="/add_servico">
-    <input name="nome" placeholder="Serviço" required>
-    <input type="number" step="0.01" name="preco" placeholder="Preço" required>
-    <button>Adicionar</button>
-</form>
+<div class="content">
 
-<h2>Produtos</h2>
-<form method="POST" action="/add_produto">
-    <input name="nome" placeholder="Produto" required>
-    <input type="number" step="0.01" name="preco" placeholder="Preço" required>
-    <button>Adicionar</button>
-</form>
+<div id="pdv" class="page">
+  <h1>PDV</h1>
 
-<h2>Planos</h2>
-<form method="POST" action="/add_plano">
-    <input name="nome" placeholder="Plano" required>
-    <input type="number" step="0.01" name="valor" placeholder="Valor mensal" required>
-    <button>Criar plano</button>
-</form>
+  {% if not aberto %}
+  <form method="POST" action="/abrir_caixa">
+    <input name="saldo" placeholder="Saldo inicial">
+    <button>Abrir Caixa</button>
+  </form>
+  {% else %}
+  <a href="/fechar_caixa">Fechar Caixa</a>
+  {% endif %}
 
-<h2>Ativar Plano</h2>
-<form method="POST" action="/ativar_plano">
-    <select name="cliente">{% for c in clientes %}<option value="{{c[0]}}">{{c[1]}}</option>{% endfor %}</select>
-    <select name="plano">{% for p in planos %}<option value="{{p[0]}}">{{p[1]}}</option>{% endfor %}</select>
-    <select name="pagamento"><option>Dinheiro</option><option>Pix</option><option>Cartão</option></select>
-    <button>Ativar</button>
-</form>
+  <form method="POST" action="/venda">
+    <input name="descricao" placeholder="Serviço / Produto">
+    <input id="valor" name="valor" placeholder="Valor">
+    <select id="pagamento" name="pagamento" onchange="troco()">
+      <option>Dinheiro</option>
+      <option>Pix</option>
+      <option>Cartão</option>
+    </select>
 
-<h2>Usar Plano</h2>
-<form method="POST" action="/usar_plano">
-    <select name="cliente">{% for c in clientes %}<option value="{{c[0]}}">{{c[1]}}</option>{% endfor %}</select>
-    <select name="servico">{% for s in servicos %}<option value="{{s[0]}}">{{s[1]}}</option>{% endfor %}</select>
-    <button>Registrar uso</button>
-</form>
+    <input id="recebido" placeholder="Recebido (dinheiro)">
+    <p id="troco"></p>
 
-<h2>Venda de Produto</h2>
-<form method="POST" action="/vender_produto">
-    <select name="produto">{% for p in produtos %}<option value="{{p[0]}}">{{p[1]}}</option>{% endfor %}</select>
-    <select name="pagamento"><option>Dinheiro</option><option>Pix</option><option>Cartão</option></select>
-    <button>Vender</button>
-</form>
+    <button>Finalizar Venda</button>
+  </form>
+</div>
 
-<h2>Caixa</h2>
-<ul>
-{% for c in caixa %}
-<li>{{ c[1] }} — R$ {{ "%.2f"|format(c[2]) }} ({{ c[4] }})</li>
-{% endfor %}
-</ul>
+<div id="servicos" class="page hidden">
+  <h1>Serviços</h1>
+  {% for s in servicos %}<p>{{ s[1] }} - R$ {{ s[2] }}</p>{% endfor %}
+</div>
+
+<div id="produtos" class="page hidden">
+  <h1>Produtos</h1>
+  {% for p in produtos %}<p>{{ p[1] }} - R$ {{ p[2] }}</p>{% endfor %}
+</div>
+
+<div id="caixa" class="page hidden">
+  <h1>Movimentações</h1>
+  {% for c in caixa %}<p>{{ c[1] }} - R$ {{ c[2] }}</p>{% endfor %}
+</div>
 
 </div>
+
 </body>
 </html>
