@@ -347,3 +347,31 @@ def relatorio_pdf():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+# ================= AGENDA =================
+@app.route("/add_agenda", methods=["POST"])
+def add_agenda():
+    data = request.form.get("data")
+    hora = request.form.get("hora")
+    cliente = request.form.get("cliente")
+    servico = request.form.get("servico")
+
+    if not data or not hora or not cliente or not servico:
+        return redirect("/")
+
+    con = conectar()
+    con.cursor().execute(
+        "INSERT INTO agenda (data, hora, cliente_id, servico_id) VALUES (?,?,?,?)",
+        (data, hora, cliente, servico)
+    )
+    con.commit()
+    con.close()
+    return redirect("/")
+
+@app.route("/del_agenda/<int:id>")
+def del_agenda(id):
+    con = conectar()
+    con.cursor().execute("DELETE FROM agenda WHERE id=?", (id,))
+    con.commit()
+    con.close()
+    return redirect("/")
