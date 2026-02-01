@@ -4,9 +4,9 @@ from datetime import datetime
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 import io
+import os
 
 app = Flask(__name__)
-criar_tabelas()
 
 # ================= HOME =================
 @app.route("/")
@@ -281,9 +281,7 @@ def relatorio_pdf():
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name="relatorio_mensal.pdf")
 
-if __name__ == "__main__":
-    app.run(debug=True)
-
+# ================= PLANOS =================
 @app.route("/add_plano", methods=["POST"])
 def add_plano():
     nome = request.form.get("nome")
@@ -334,14 +332,12 @@ def ativar_plano():
         con.close()
         return redirect("/")
 
-    # vincula plano ao cliente + saldo
     c.execute("""
         UPDATE clientes
         SET plano_id=?, saldo_plano=?
         WHERE id=?
     """, (plano_id, plano[2], cliente_id))
 
-    # entra no caixa
     c.execute("""
         INSERT INTO caixa (descricao, valor, tipo, pagamento)
         VALUES (?, ?, 'entrada', ?)
@@ -362,7 +358,6 @@ def usar_plano():
     con = conectar()
     c = con.cursor()
 
-    # verifica saldo do cliente
     c.execute("SELECT saldo_plano FROM clientes WHERE id=?", (cliente_id,))
     row = c.fetchone()
 
@@ -370,13 +365,11 @@ def usar_plano():
         con.close()
         return redirect("/")
 
-    # registra uso do plano
     c.execute("""
         INSERT INTO uso_plano (cliente_id, servico_id)
         VALUES (?,?)
     """, (cliente_id, servico_id))
 
-    # abate saldo
     c.execute("""
         UPDATE clientes
         SET saldo_plano = saldo_plano - 1
@@ -387,9 +380,8 @@ def usar_plano():
     con.close()
     return redirect("/")
 
-import os
-
+# ================= START APP (RENDER) =================
 if __name__ == "__main__":
+    criar_tabelas()
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
