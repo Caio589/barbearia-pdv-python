@@ -1,16 +1,12 @@
-from flask import Flask, render_template, request, redirect, jsonify
-import sqlite3
-from database import criar_tabelas
+from flask import Flask, render_template, request, redirect
+from database import criar_tabelas, conectar
 
 app = Flask(__name__)
 criar_tabelas()
 
-def db():
-    return sqlite3.connect("barbearia.db")
-
 @app.route("/")
 def home():
-    con = db()
+    con = conectar()
     c = con.cursor()
 
     c.execute("SELECT * FROM caixa ORDER BY id DESC")
@@ -27,22 +23,33 @@ def home():
 
     con.close()
 
-    return render_template("index.html", caixa=caixa, servicos=servicos, produtos=produtos, aberto=aberto)
+    return render_template(
+        "index.html",
+        caixa=caixa,
+        servicos=servicos,
+        produtos=produtos,
+        aberto=aberto
+    )
 
 @app.route("/abrir_caixa", methods=["POST"])
 def abrir_caixa():
-    saldo = request.form["saldo"]
-    con = db()
+    saldo = float(request.form["saldo"])
+    con = conectar()
     c = con.cursor()
+
     c.execute("UPDATE caixa_status SET aberto=1, saldo_inicial=?", (saldo,))
-    c.execute("INSERT INTO caixa (descricao, valor, tipo) VALUES ('Abertura de Caixa', ?, 'entrada')", (saldo,))
+    c.execute("""
+        INSERT INTO caixa (descricao, valor, tipo, pagamento)
+        VALUES ('Abertura de Caixa', ?, 'entrada', 'Dinheiro')
+    """, (saldo,))
+
     con.commit()
     con.close()
     return redirect("/")
 
 @app.route("/fechar_caixa")
 def fechar_caixa():
-    con = db()
+    con = conectar()
     c = con.cursor()
     c.execute("UPDATE caixa_status SET aberto=0")
     con.commit()
@@ -51,12 +58,21 @@ def fechar_caixa():
 
 @app.route("/venda", methods=["POST"])
 def venda():
-    desc = request.form["descricao"]
+    descricao = request.form["descricao"]
     valor = float(request.form["valor"])
     pagamento = request.form["pagamento"]
-    con = db()
+
+    con = conectar()
     c = con.cursor()
-    c.execute("INSERT INTO caixa (descricao, valor, tipo, pagamento) VALUES (?, ?, 'entrada', ?)", (desc, valor, pagamento))
+
+    c.execute("""
+        INSERT INTO caixa (descricao, valor, tipo, pagamento)
+        VALUES (?, ?, 'entrada', ?)
+    """, (descricao, valor, pagamento))
+
     con.commit()
     con.close()
     return redirect("/")
+
+if __name__ == "__main__":
+    app.run(debug=True)
