@@ -80,3 +80,13 @@ def criar_tabelas():
 
     con.commit()
     con.close()
+    
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS agenda (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        data TEXT,
+        hora TEXT,
+        cliente_id INTEGER,
+        servico_id INTEGER
+    )
+    """)
