@@ -311,3 +311,42 @@ def add_plano():
     con.commit()
     con.close()
     return redirect("/")
+
+@app.route("/ativar_plano", methods=["POST"])
+def ativar_plano():
+    cliente_id = request.form.get("cliente")
+    plano_id = request.form.get("plano")
+    pagamento = request.form.get("pagamento", "Dinheiro")
+
+    if not cliente_id or not plano_id:
+        return redirect("/")
+
+    con = conectar()
+    c = con.cursor()
+
+    c.execute("SELECT nome, valor, limite FROM planos WHERE id=?", (plano_id,))
+    plano = c.fetchone()
+
+    c.execute("SELECT nome FROM clientes WHERE id=?", (cliente_id,))
+    cliente = c.fetchone()
+
+    if not plano or not cliente:
+        con.close()
+        return redirect("/")
+
+    # vincula plano ao cliente + saldo
+    c.execute("""
+        UPDATE clientes
+        SET plano_id=?, saldo_plano=?
+        WHERE id=?
+    """, (plano_id, plano[2], cliente_id))
+
+    # entra no caixa
+    c.execute("""
+        INSERT INTO caixa (descricao, valor, tipo, pagamento)
+        VALUES (?, ?, 'entrada', ?)
+    """, (f"Plano {plano[0]} - {cliente[0]}", plano[1], pagamento))
+
+    con.commit()
+    con.close()
+    return redirect("/")
