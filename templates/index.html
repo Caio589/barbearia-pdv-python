@@ -1,92 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Barbearia PDV</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<script src="{{ url_for('static', filename='script.js') }}" defer></script>
+  <title>TESTE</title>
 </head>
 <body>
-
-<div class="bg"></div>
-
-<!-- SIDEBAR -->
-<div class="sidebar">
-  <div class="logo">💈</div>
-  <button onclick="showPage('pdv')">💳</button>
-  <button onclick="showPage('clientes')">👤</button>
-  <button onclick="showPage('servicos')">✂️</button>
-  <button onclick="showPage('produtos')">🧴</button>
-  <button onclick="showPage('planos')">📦</button>
-  <button onclick="showPage('agenda')">📅</button>
-  <button onclick="showPage('relatorio')">📊</button>
-</div>
-
-<div class="content">
-
-<!-- PDV -->
-<div id="pdv" class="page">
-  <h1>PDV</h1>
-</div>
-
-<!-- CLIENTES -->
-<div id="clientes" class="page hidden">
-  <h1>Clientes</h1>
-</div>
-
-<!-- SERVIÇOS -->
-<div id="servicos" class="page hidden">
-  <h1>Serviços</h1>
-</div>
-
-<!-- PRODUTOS -->
-<div id="produtos" class="page hidden">
-  <h1>Produtos</h1>
-</div>
-
-<!-- PLANOS -->
-<div id="planos" class="page hidden">
-  <h1>Planos</h1>
-</div>
-
-<!-- ✅ AGENDA -->
-<div id="agenda" class="page hidden">
-<h1>Agenda</h1>
-
-<form method="POST" action="/add_agenda" class="box">
-  <input type="date" name="data" required>
-  <input type="time" name="hora" required>
-
-  <select name="cliente" required>
-    {% for c in clientes %}
-    <option value="{{c[0]}}">{{c[1]}}</option>
-    {% endfor %}
-  </select>
-
-  <select name="servico" required>
-    {% for s in servicos %}
-    <option value="{{s[0]}}">{{s[1]}}</option>
-    {% endfor %}
-  </select>
-
-  <button>Agendar</button>
-</form>
-
-<ul class="lista">
-{% for a in agenda %}
-<li>
-  {{ a[1] }} {{ a[2] }} — {{ a[3] }} ({{ a[4] }})
-  <a href="/del_agenda/{{ a[0] }}" class="btn-danger">✖</a>
-</li>
-{% endfor %}
-</ul>
-</div>
-
-<!-- RELATÓRIO -->
-<div id="relatorio" class="page hidden">
-  <h1>Relatório</h1>
-</div>
-
-</div>
+  <h1>TESTE FLASK</h1>
 </body>
 </html>
