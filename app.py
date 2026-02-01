@@ -47,11 +47,11 @@ def home():
 
     def total(p):
         c.execute("""
-            SELECT IFNULL(SUM(valor),0)
+            SELECT COALESCE(SUM(valor), 0)
             FROM caixa
-            WHERE tipo='entrada'
-              AND pagamento=?
-              AND strftime('%Y-%m', data)=?
+            WHERE tipo = 'entrada'
+              AND pagamento = %s
+              AND TO_CHAR(data, 'YYYY-MM') = %s
         """, (p, mes))
         return c.fetchone()[0]
 
@@ -88,10 +88,10 @@ def abrir_caixa():
     con = conectar()
     c = con.cursor()
 
-    c.execute("UPDATE caixa_status SET aberto=1, saldo_inicial=?", (saldo,))
+    c.execute("UPDATE caixa_status SET aberto=1, saldo_inicial=%s", (saldo,))
     c.execute("""
         INSERT INTO caixa (descricao, valor, tipo, pagamento)
-        VALUES ('Abertura de Caixa', ?, 'entrada', 'Dinheiro')
+        VALUES ('Abertura de Caixa', %s, 'entrada', 'Dinheiro')
     """, (saldo,))
 
     con.commit()
@@ -113,9 +113,9 @@ def preco(tipo, item_id):
     c = con.cursor()
 
     if tipo == "servico":
-        c.execute("SELECT preco FROM servicos WHERE id=?", (item_id,))
+        c.execute("SELECT preco FROM servicos WHERE id=%s", (item_id,))
     else:
-        c.execute("SELECT preco FROM produtos WHERE id=?", (item_id,))
+        c.execute("SELECT preco FROM produtos WHERE id=%s", (item_id,))
 
     row = c.fetchone()
     con.close()
@@ -140,15 +140,15 @@ def venda():
         return redirect("/")
 
     if tipo == "servico":
-        c.execute("SELECT nome, preco FROM servicos WHERE id=?", (item_id,))
+        c.execute("SELECT nome, preco FROM servicos WHERE id=%s", (item_id,))
     else:
-        c.execute("SELECT nome, preco FROM produtos WHERE id=?", (item_id,))
+        c.execute("SELECT nome, preco FROM produtos WHERE id=%s", (item_id,))
 
     nome, preco = c.fetchone()
 
     c.execute("""
         INSERT INTO caixa (descricao, valor, tipo, pagamento)
-        VALUES (?, ?, 'entrada', ?)
+        VALUES (%s, %s, 'entrada', %s)
     """, (f"{tipo.title()}: {nome}", preco, pagamento))
 
     con.commit()
@@ -166,7 +166,7 @@ def add_cliente():
 
     con = conectar()
     con.cursor().execute(
-        "INSERT INTO clientes (nome, telefone) VALUES (?,?)",
+        "INSERT INTO clientes (nome, telefone) VALUES (%s,%s)",
         (nome, telefone)
     )
     con.commit()
@@ -188,7 +188,7 @@ def add_servico():
 
     con = conectar()
     con.cursor().execute(
-        "INSERT INTO servicos (nome, preco) VALUES (?,?)",
+        "INSERT INTO servicos (nome, preco) VALUES (%s,%s)",
         (nome, preco)
     )
     con.commit()
@@ -210,7 +210,7 @@ def add_produto():
 
     con = conectar()
     con.cursor().execute(
-        "INSERT INTO produtos (nome, preco) VALUES (?,?)",
+        "INSERT INTO produtos (nome, preco) VALUES (%s,%s)",
         (nome, preco)
     )
     con.commit()
@@ -230,7 +230,7 @@ def add_agenda():
 
     con = conectar()
     con.cursor().execute(
-        "INSERT INTO agenda (data, hora, cliente_id, servico_id) VALUES (?,?,?,?)",
+        "INSERT INTO agenda (data, hora, cliente_id, servico_id) VALUES (%s,%s,%s,%s)",
         (data, hora, cliente, servico)
     )
     con.commit()
@@ -240,7 +240,7 @@ def add_agenda():
 @app.route("/del_agenda/<int:id>")
 def del_agenda(id):
     con = conectar()
-    con.cursor().execute("DELETE FROM agenda WHERE id=?", (id,))
+    con.cursor().execute("DELETE FROM agenda WHERE id=%s", (id,))
     con.commit()
     con.close()
     return redirect("/")
@@ -256,7 +256,7 @@ def relatorio_pdf():
         SELECT descricao, valor, pagamento, data
         FROM caixa
         WHERE tipo='entrada'
-        AND strftime('%Y-%m', data)=?
+        AND TO_CHAR(data, 'YYYY-MM')=%s
     """, (mes,))
     dados = c.fetchall()
     con.close()
@@ -281,106 +281,7 @@ def relatorio_pdf():
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name="relatorio_mensal.pdf")
 
-# ================= PLANOS =================
-@app.route("/add_plano", methods=["POST"])
-def add_plano():
-    nome = request.form.get("nome")
-    valor = request.form.get("valor")
-    limite = request.form.get("limite", "0")
-
-    if not nome or not valor:
-        return redirect("/")
-
-    try:
-        valor = float(valor.replace(",", "."))
-    except:
-        valor = 0.0
-
-    try:
-        limite = int(limite)
-    except:
-        limite = 0
-
-    con = conectar()
-    con.cursor().execute(
-        "INSERT INTO planos (nome, valor, limite) VALUES (?,?,?)",
-        (nome, valor, limite)
-    )
-    con.commit()
-    con.close()
-    return redirect("/")
-
-@app.route("/ativar_plano", methods=["POST"])
-def ativar_plano():
-    cliente_id = request.form.get("cliente")
-    plano_id = request.form.get("plano")
-    pagamento = request.form.get("pagamento", "Dinheiro")
-
-    if not cliente_id or not plano_id:
-        return redirect("/")
-
-    con = conectar()
-    c = con.cursor()
-
-    c.execute("SELECT nome, valor, limite FROM planos WHERE id=?", (plano_id,))
-    plano = c.fetchone()
-
-    c.execute("SELECT nome FROM clientes WHERE id=?", (cliente_id,))
-    cliente = c.fetchone()
-
-    if not plano or not cliente:
-        con.close()
-        return redirect("/")
-
-    c.execute("""
-        UPDATE clientes
-        SET plano_id=?, saldo_plano=?
-        WHERE id=?
-    """, (plano_id, plano[2], cliente_id))
-
-    c.execute("""
-        INSERT INTO caixa (descricao, valor, tipo, pagamento)
-        VALUES (?, ?, 'entrada', ?)
-    """, (f"Plano {plano[0]} - {cliente[0]}", plano[1], pagamento))
-
-    con.commit()
-    con.close()
-    return redirect("/")
-
-@app.route("/usar_plano", methods=["POST"])
-def usar_plano():
-    cliente_id = request.form.get("cliente")
-    servico_id = request.form.get("servico")
-
-    if not cliente_id or not servico_id:
-        return redirect("/")
-
-    con = conectar()
-    c = con.cursor()
-
-    c.execute("SELECT saldo_plano FROM clientes WHERE id=?", (cliente_id,))
-    row = c.fetchone()
-
-    if not row or row[0] <= 0:
-        con.close()
-        return redirect("/")
-
-    c.execute("""
-        INSERT INTO uso_plano (cliente_id, servico_id)
-        VALUES (?,?)
-    """, (cliente_id, servico_id))
-
-    c.execute("""
-        UPDATE clientes
-        SET saldo_plano = saldo_plano - 1
-        WHERE id=?
-    """, (cliente_id,))
-
-    con.commit()
-    con.close()
-    return redirect("/")
-
-# ================= START APP (RENDER) =================
+# ================= START APP =================
 if __name__ == "__main__":
     criar_tabelas()
     port = int(os.environ.get("PORT", 5000))
