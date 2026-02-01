@@ -10,7 +10,6 @@
 
 <div class="bg"></div>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
   <div class="logo">💈</div>
   <button onclick="showPage('pdv')">💳</button>
@@ -18,15 +17,15 @@
   <button onclick="showPage('servicos')">✂️</button>
   <button onclick="showPage('produtos')">🧴</button>
   <button onclick="showPage('planos')">📦</button>
+  <button onclick="showPage('agenda')">📅</button>
   <button onclick="showPage('relatorio')">📊</button>
 </div>
 
-<!-- CONTEÚDO -->
 <div class="content">
 
-<!-- PDV / VENDA INTELIGENTE -->
+<!-- PDV -->
 <div id="pdv" class="page">
-<h1>PDV – Venda Inteligente</h1>
+<h1>PDV</h1>
 
 {% if not aberto %}
 <form method="POST" action="/abrir_caixa" class="box">
@@ -56,7 +55,7 @@
     <option>Cartão</option>
   </select>
 
-  <input id="recebido" placeholder="Recebido (dinheiro)" onkeyup="calcularTroco()">
+  <input id="recebido" placeholder="Recebido" onkeyup="calcularTroco()">
   <p id="troco"></p>
 
   <button>Finalizar Venda</button>
@@ -111,50 +110,17 @@
 </ul>
 </div>
 
-<!-- PLANOS (CORRIGIDO) -->
-<div id="planos" class="page hidden">
-<h1>Planos</h1>
+<!-- AGENDA -->
+<div id="agenda" class="page hidden">
+<h1>Agenda</h1>
 
-<!-- CRIAR PLANO -->
-<form method="POST" action="/add_plano" class="box">
-  <input name="nome" placeholder="Nome do plano" required>
-  <input name="valor" placeholder="Valor mensal" required>
-  <input name="limite" placeholder="Quantidade de usos">
-  <button>Criar Plano</button>
-</form>
+<form method="POST" action="/add_agenda" class="box">
+  <input type="date" name="data" required>
+  <input type="time" name="hora" required>
 
-<!-- ATIVAR PLANO -->
-<h3>Ativar plano para cliente</h3>
-<form method="POST" action="/ativar_plano" class="box">
   <select name="cliente" required>
     {% for c in clientes %}
     <option value="{{c[0]}}">{{c[1]}}</option>
-    {% endfor %}
-  </select>
-
-  <select name="plano" required>
-    {% for p in planos %}
-    <option value="{{p[0]}}">{{p[1]}}</option>
-    {% endfor %}
-  </select>
-
-  <select name="pagamento">
-    <option>Dinheiro</option>
-    <option>Pix</option>
-    <option>Cartão</option>
-  </select>
-
-  <button>Ativar Plano</button>
-</form>
-
-<!-- USAR PLANO -->
-<h3>Usar plano</h3>
-<form method="POST" action="/usar_plano" class="box">
-  <select name="cliente" required>
-    {% for c in clientes %}
-    <option value="{{c[0]}}">
-      {{c[1]}} (Saldo: {{ c[4] }})
-    </option>
     {% endfor %}
   </select>
 
@@ -164,25 +130,31 @@
     {% endfor %}
   </select>
 
-  <button>Usar Plano</button>
+  <button>Agendar</button>
 </form>
+
+<ul class="lista">
+{% for a in agenda %}
+<li>
+  {{ a[1] }} {{ a[2] }} — {{ a[3] }} ({{ a[4] }})
+  <a href="/del_agenda/{{ a[0] }}" class="btn-danger">✖</a>
+</li>
+{% endfor %}
+</ul>
 </div>
 
 <!-- RELATÓRIO -->
 <div id="relatorio" class="page hidden">
 <h1>Relatório Mensal</h1>
-
 <p>💵 Dinheiro: R$ {{ "%.2f"|format(total_dinheiro) }}</p>
 <p>📲 Pix: R$ {{ "%.2f"|format(total_pix) }}</p>
 <p>💳 Cartão: R$ {{ "%.2f"|format(total_cartao) }}</p>
-<h2>Total do mês: R$ {{ "%.2f"|format(total_mes) }}</h2>
-
-<a href="/relatorio_pdf" target="_blank" class="btn">📄 Baixar PDF</a>
+<h2>Total: R$ {{ "%.2f"|format(total_mes) }}</h2>
+<a href="/relatorio_pdf" target="_blank" class="btn">📄 PDF</a>
 </div>
 
 </div>
 
-<!-- SCRIPTS DA VENDA INTELIGENTE -->
 <script>
 const servicos = {{ servicos|tojson }};
 const produtos = {{ produtos|tojson }};
@@ -192,9 +164,7 @@ function carregarItens(){
   const item = document.getElementById("item");
   item.innerHTML = '<option value="">Selecione</option>';
 
-  const lista = tipo === "servico" ? servicos : produtos;
-
-  lista.forEach(i => {
+  (tipo === "servico" ? servicos : produtos).forEach(i => {
     const opt = document.createElement("option");
     opt.value = i[0];
     opt.text = i[1];
@@ -209,22 +179,14 @@ function buscarPreco(){
 
   fetch(`/preco/${tipo}/${id}`)
     .then(r => r.json())
-    .then(p => {
-      document.getElementById("valor").value = "R$ " + p.toFixed(2);
-    });
+    .then(p => document.getElementById("valor").value = "R$ " + p.toFixed(2));
 }
 
 function calcularTroco(){
-  const pagamento = document.getElementById("pagamento").value;
   const recebido = parseFloat(document.getElementById("recebido").value || 0);
-  const valor = parseFloat(
-    document.getElementById("valor").value.replace("R$","") || 0
-  );
-
+  const valor = parseFloat(document.getElementById("valor").value.replace("R$","") || 0);
   document.getElementById("troco").innerText =
-    pagamento === "Dinheiro" && recebido >= valor
-      ? "Troco: R$ " + (recebido - valor).toFixed(2)
-      : "";
+    recebido >= valor ? "Troco: R$ " + (recebido - valor).toFixed(2) : "";
 }
 </script>
 
