@@ -10,7 +10,7 @@ def criar_tabelas():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS clientes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL,
+        nome TEXT,
         telefone TEXT,
         plano_id INTEGER
     )
@@ -19,24 +19,24 @@ def criar_tabelas():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS servicos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL,
-        preco REAL NOT NULL
+        nome TEXT,
+        preco REAL
     )
     """)
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS produtos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL,
-        preco REAL NOT NULL
+        nome TEXT,
+        preco REAL
     )
     """)
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS planos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL,
-        valor REAL NOT NULL
+        nome TEXT,
+        valor REAL
     )
     """)
 
