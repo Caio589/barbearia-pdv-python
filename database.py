@@ -7,7 +7,6 @@ def criar_tabelas():
     con = conectar()
     c = con.cursor()
 
-    # CLIENTES COM SALDO DE PLANO
     c.execute("""
     CREATE TABLE IF NOT EXISTS clientes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,7 +33,6 @@ def criar_tabelas():
     )
     """)
 
-    # PLANO COM LIMITE
     c.execute("""
     CREATE TABLE IF NOT EXISTS planos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,13 +42,22 @@ def criar_tabelas():
     )
     """)
 
-    # HISTÓRICO DE USO DO PLANO
     c.execute("""
     CREATE TABLE IF NOT EXISTS uso_plano (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         cliente_id INTEGER,
         servico_id INTEGER,
         data DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS agenda (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        data TEXT,
+        hora TEXT,
+        cliente_id INTEGER,
+        servico_id INTEGER
     )
     """)
 
@@ -74,19 +81,9 @@ def criar_tabelas():
     """)
 
     c.execute("""
-        INSERT OR IGNORE INTO caixa_status (id, aberto, saldo_inicial)
-        VALUES (1, 0, 0)
+    INSERT OR IGNORE INTO caixa_status (id, aberto, saldo_inicial)
+    VALUES (1, 0, 0)
     """)
 
     con.commit()
     con.close()
-    
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS agenda (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        data TEXT,
-        hora TEXT,
-        cliente_id INTEGER,
-        servico_id INTEGER
-    )
-    """)
