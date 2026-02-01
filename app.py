@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, redirect
-import sqlite3
+from flask import Flask, render_template, request, redirect, send_file
 from database import criar_tabelas, conectar
 from datetime import datetime
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+import io
 
 app = Flask(__name__)
 criar_tabelas()
@@ -88,8 +90,7 @@ def abrir_caixa():
 @app.route("/fechar_caixa")
 def fechar_caixa():
     con = conectar()
-    c = con.cursor()
-    c.execute("UPDATE caixa_status SET aberto=0")
+    con.cursor().execute("UPDATE caixa_status SET aberto=0")
     con.commit()
     con.close()
     return redirect("/")
@@ -111,7 +112,6 @@ def venda():
     con = conectar()
     c = con.cursor()
 
-    # só vende se caixa estiver aberto
     c.execute("SELECT aberto FROM caixa_status WHERE id=1")
     if c.fetchone()[0] != 1:
         con.close()
@@ -171,6 +171,69 @@ def add_plano():
     con.close()
     return redirect("/")
 
-# ---------------- START ----------------
+# ---------------- PDF MENSAL ----------------
+@app.route("/relatorio_pdf")
+def relatorio_pdf():
+    con = conectar()
+    c = con.cursor()
+
+    mes = datetime.now().strftime("%Y-%m")
+
+    c.execute("""
+        SELECT descricao, valor, pagamento, data
+        FROM caixa
+        WHERE tipo='entrada'
+        AND strftime('%Y-%m', data)=?
+    """, (mes,))
+    dados = c.fetchall()
+
+    c.execute("""
+        SELECT pagamento, SUM(valor)
+        FROM caixa
+        WHERE tipo='entrada'
+        AND strftime('%Y-%m', data)=?
+        GROUP BY pagamento
+    """, (mes,))
+    totais = c.fetchall()
+
+    con.close()
+
+    buffer = io.BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    largura, altura = A4
+
+    pdf.setFont("Helvetica-Bold", 16)
+    pdf.drawString(50, altura - 50, "Relatório Mensal - Barbearia")
+
+    y = altura - 90
+    pdf.setFont("Helvetica", 10)
+
+    for d in dados:
+        pdf.drawString(50, y, f"{d[3][:10]} | {d[0]} | R$ {d[1]:.2f} | {d[2]}")
+        y -= 14
+        if y < 40:
+            pdf.showPage()
+            y = altura - 50
+
+    pdf.showPage()
+    pdf.setFont("Helvetica-Bold", 14)
+    pdf.drawString(50, altura - 50, "Totais por pagamento")
+
+    y = altura - 90
+    pdf.setFont("Helvetica", 12)
+    for t in totais:
+        pdf.drawString(50, y, f"{t[0]}: R$ {t[1]:.2f}")
+        y -= 20
+
+    pdf.save()
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="relatorio_mensal.pdf",
+        mimetype="application/pdf"
+    )
+
 if __name__ == "__main__":
     app.run(debug=True)
