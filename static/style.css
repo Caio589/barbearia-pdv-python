@@ -50,3 +50,11 @@ body {
 }
 
 .hidden { display:none; }
+
+.page {
+  display: none;
+}
+
+#pdv {
+  display: block;
+}
