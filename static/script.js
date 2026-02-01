@@ -1,16 +1,40 @@
-function show(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
+function showPage(pageId) {
+    // esconde todas as páginas
+    document.querySelectorAll(".page").forEach(page => {
+        page.classList.add("hidden");
+    });
+
+    // mostra a página clicada
+    const page = document.getElementById(pageId);
+    if (page) {
+        page.classList.remove("hidden");
+    }
 }
 
-function troco(){
-  const v = parseFloat(document.getElementById("valor").value || 0);
-  const r = parseFloat(document.getElementById("recebido").value || 0);
-  const p = document.getElementById("pagamento").value;
+// TROCO AUTOMÁTICO
+function calcularTroco() {
+    const valor = parseFloat(
+        (document.getElementById("valor")?.value || "0").replace(",", ".")
+    );
 
-  if(p === "Dinheiro"){
-    document.getElementById("troco").innerText = "Troco: R$ " + (r - v).toFixed(2);
-  } else {
-    document.getElementById("troco").innerText = "";
-  }
+    const recebido = parseFloat(
+        (document.getElementById("recebido")?.value || "0").replace(",", ".")
+    );
+
+    const pagamento = document.getElementById("pagamento")?.value;
+    const trocoEl = document.getElementById("troco");
+
+    if (!trocoEl) return;
+
+    if (pagamento === "Dinheiro" && recebido >= valor && valor > 0) {
+        const troco = recebido - valor;
+        trocoEl.innerText = "Troco: R$ " + troco.toFixed(2);
+    } else {
+        trocoEl.innerText = "";
+    }
 }
+
+// abre o PDV automaticamente ao carregar
+document.addEventListener("DOMContentLoaded", () => {
+    showPage("pdv");
+});
