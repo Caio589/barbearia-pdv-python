@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, redirect
+import sqlite3
 from database import criar_tabelas, conectar
 from datetime import datetime
 
 app = Flask(__name__)
 criar_tabelas()
 
+# ---------------- HOME ----------------
 @app.route("/")
 def home():
     con = conectar()
@@ -31,14 +33,14 @@ def home():
     # RELATÓRIO MENSAL
     mes = datetime.now().strftime("%Y-%m")
 
-    def total_pagamento(tipo):
+    def total_pagamento(p):
         c.execute("""
             SELECT IFNULL(SUM(valor),0)
             FROM caixa
             WHERE tipo='entrada'
-            AND pagamento=?
-            AND strftime('%Y-%m', data)=?
-        """, (tipo, mes))
+              AND pagamento=?
+              AND strftime('%Y-%m', data)=?
+        """, (p, mes))
         return c.fetchone()[0]
 
     total_dinheiro = total_pagamento("Dinheiro")
@@ -62,7 +64,69 @@ def home():
         total_mes=total_mes
     )
 
-# ---------- CADASTROS ----------
+# ---------------- CAIXA ----------------
+@app.route("/abrir_caixa", methods=["POST"])
+def abrir_caixa():
+    try:
+        saldo = float(request.form.get("saldo", "0").replace(",", "."))
+    except:
+        saldo = 0.0
+
+    con = conectar()
+    c = con.cursor()
+
+    c.execute("UPDATE caixa_status SET aberto=1, saldo_inicial=?", (saldo,))
+    c.execute("""
+        INSERT INTO caixa (descricao, valor, tipo, pagamento)
+        VALUES ('Abertura de Caixa', ?, 'entrada', 'Dinheiro')
+    """, (saldo,))
+
+    con.commit()
+    con.close()
+    return redirect("/")
+
+@app.route("/fechar_caixa")
+def fechar_caixa():
+    con = conectar()
+    c = con.cursor()
+    c.execute("UPDATE caixa_status SET aberto=0")
+    con.commit()
+    con.close()
+    return redirect("/")
+
+# ---------------- VENDA ----------------
+@app.route("/venda", methods=["POST"])
+def venda():
+    descricao = request.form.get("descricao", "").strip()
+    pagamento = request.form.get("pagamento", "Dinheiro")
+
+    try:
+        valor = float(request.form.get("valor", "0").replace(",", "."))
+    except:
+        return redirect("/")
+
+    if valor <= 0 or descricao == "":
+        return redirect("/")
+
+    con = conectar()
+    c = con.cursor()
+
+    # só vende se caixa estiver aberto
+    c.execute("SELECT aberto FROM caixa_status WHERE id=1")
+    if c.fetchone()[0] != 1:
+        con.close()
+        return redirect("/")
+
+    c.execute("""
+        INSERT INTO caixa (descricao, valor, tipo, pagamento)
+        VALUES (?, ?, 'entrada', ?)
+    """, (descricao, valor, pagamento))
+
+    con.commit()
+    con.close()
+    return redirect("/")
+
+# ---------------- CADASTROS ----------------
 @app.route("/add_cliente", methods=["POST"])
 def add_cliente():
     con = conectar()
@@ -70,7 +134,8 @@ def add_cliente():
         "INSERT INTO clientes (nome, telefone) VALUES (?,?)",
         (request.form["nome"], request.form["telefone"])
     )
-    con.commit(); con.close()
+    con.commit()
+    con.close()
     return redirect("/")
 
 @app.route("/add_servico", methods=["POST"])
@@ -80,7 +145,8 @@ def add_servico():
         "INSERT INTO servicos (nome, preco) VALUES (?,?)",
         (request.form["nome"], request.form["preco"].replace(",", "."))
     )
-    con.commit(); con.close()
+    con.commit()
+    con.close()
     return redirect("/")
 
 @app.route("/add_produto", methods=["POST"])
@@ -90,7 +156,8 @@ def add_produto():
         "INSERT INTO produtos (nome, preco) VALUES (?,?)",
         (request.form["nome"], request.form["preco"].replace(",", "."))
     )
-    con.commit(); con.close()
+    con.commit()
+    con.close()
     return redirect("/")
 
 @app.route("/add_plano", methods=["POST"])
@@ -100,5 +167,10 @@ def add_plano():
         "INSERT INTO planos (nome, valor) VALUES (?,?)",
         (request.form["nome"], request.form["valor"].replace(",", "."))
     )
-    con.commit(); con.close()
+    con.commit()
+    con.close()
     return redirect("/")
+
+# ---------------- START ----------------
+if __name__ == "__main__":
+    app.run(debug=True)
