@@ -1,70 +1,145 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<title>Barbearia PDV</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<script src="{{ url_for('static', filename='script.js') }}" defer></script>
+    <meta charset="UTF-8">
+    <title>Barbearia PDV</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
 </head>
-
 <body>
 
+<!-- FUNDO -->
 <div class="bg"></div>
 
+<!-- SIDEBAR -->
 <div class="sidebar">
-  <h2>💈</h2>
-  <button onclick="show('pdv')">💳 PDV</button>
-  <button onclick="show('servicos')">✂️ Serviços</button>
-  <button onclick="show('produtos')">🧴 Produtos</button>
-  <button onclick="show('caixa')">📊 Caixa</button>
+    <div class="logo">💈</div>
+    <button onclick="showPage('pdv')">💳</button>
+    <button onclick="showPage('clientes')">👤</button>
+    <button onclick="showPage('servicos')">✂️</button>
+    <button onclick="showPage('produtos')">🧴</button>
+    <button onclick="showPage('planos')">📦</button>
+    <button onclick="showPage('relatorio')">📊</button>
 </div>
 
+<!-- CONTEÚDO -->
 <div class="content">
 
+<!-- PDV -->
 <div id="pdv" class="page">
-  <h1>PDV</h1>
+    <h1>PDV</h1>
 
-  {% if not aberto %}
-  <form method="POST" action="/abrir_caixa">
-    <input name="saldo" placeholder="Saldo inicial">
-    <button>Abrir Caixa</button>
-  </form>
-  {% else %}
-  <a href="/fechar_caixa">Fechar Caixa</a>
-  {% endif %}
+    {% if not aberto %}
+    <form method="POST" action="/abrir_caixa" class="box">
+        <h3>Abrir Caixa</h3>
+        <input name="saldo" placeholder="Saldo inicial">
+        <button>Abrir Caixa</button>
+    </form>
+    {% else %}
+    <a href="/fechar_caixa" class="btn-danger">Fechar Caixa</a>
+    {% endif %}
 
-  <form method="POST" action="/venda">
-    <input name="descricao" placeholder="Serviço / Produto">
-    <input id="valor" name="valor" placeholder="Valor">
-    <select id="pagamento" name="pagamento" onchange="troco()">
-      <option>Dinheiro</option>
-      <option>Pix</option>
-      <option>Cartão</option>
-    </select>
+    <form method="POST" action="/venda" class="box">
+        <h3>Venda</h3>
+        <input name="descricao" placeholder="Descrição (serviço/produto)" required>
+        <input id="valor" name="valor" placeholder="Valor" required>
 
-    <input id="recebido" placeholder="Recebido (dinheiro)">
-    <p id="troco"></p>
+        <select id="pagamento" name="pagamento" onchange="calcularTroco()">
+            <option>Dinheiro</option>
+            <option>Pix</option>
+            <option>Cartão</option>
+        </select>
 
-    <button>Finalizar Venda</button>
-  </form>
+        <input id="recebido" placeholder="Recebido (dinheiro)" onkeyup="calcularTroco()">
+        <p id="troco"></p>
+
+        <button>Finalizar Venda</button>
+    </form>
 </div>
 
+<!-- CLIENTES -->
+<div id="clientes" class="page hidden">
+    <h1>Clientes</h1>
+    <form method="POST" action="/add_cliente" class="box">
+        <input name="nome" placeholder="Nome" required>
+        <input name="telefone" placeholder="Telefone">
+        <button>Salvar</button>
+    </form>
+
+    <ul class="lista">
+        {% for c in clientes %}
+        <li>{{ c[1] }} - {{ c[2] }}</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<!-- SERVIÇOS -->
 <div id="servicos" class="page hidden">
-  <h1>Serviços</h1>
-  {% for s in servicos %}<p>{{ s[1] }} - R$ {{ s[2] }}</p>{% endfor %}
+    <h1>Serviços</h1>
+    <form method="POST" action="/add_servico" class="box">
+        <input name="nome" placeholder="Serviço" required>
+        <input name="preco" placeholder="Preço" required>
+        <button>Salvar</button>
+    </form>
+
+    <ul class="lista">
+        {% for s in servicos %}
+        <li>{{ s[1] }} - R$ {{ "%.2f"|format(s[2]) }}</li>
+        {% endfor %}
+    </ul>
 </div>
 
+<!-- PRODUTOS -->
 <div id="produtos" class="page hidden">
-  <h1>Produtos</h1>
-  {% for p in produtos %}<p>{{ p[1] }} - R$ {{ p[2] }}</p>{% endfor %}
+    <h1>Produtos</h1>
+    <form method="POST" action="/add_produto" class="box">
+        <input name="nome" placeholder="Produto" required>
+        <input name="preco" placeholder="Preço" required>
+        <button>Salvar</button>
+    </form>
+
+    <ul class="lista">
+        {% for p in produtos %}
+        <li>{{ p[1] }} - R$ {{ "%.2f"|format(p[2]) }}</li>
+        {% endfor %}
+    </ul>
 </div>
 
-<div id="caixa" class="page hidden">
-  <h1>Movimentações</h1>
-  {% for c in caixa %}<p>{{ c[1] }} - R$ {{ c[2] }}</p>{% endfor %}
+<!-- PLANOS -->
+<div id="planos" class="page hidden">
+    <h1>Planos</h1>
+    <form method="POST" action="/add_plano" class="box">
+        <input name="nome" placeholder="Nome do plano" required>
+        <input name="valor" placeholder="Valor mensal" required>
+        <button>Salvar</button>
+    </form>
+
+    <ul class="lista">
+        {% for p in planos %}
+        <li>{{ p[1] }} - R$ {{ "%.2f"|format(p[2]) }}</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<!-- RELATÓRIO -->
+<div id="relatorio" class="page hidden">
+    <h1>Relatório Mensal</h1>
+
+    <div class="box">
+        <p>💵 Dinheiro: <strong>R$ {{ "%.2f"|format(total_dinheiro) }}</strong></p>
+        <p>📲 Pix: <strong>R$ {{ "%.2f"|format(total_pix) }}</strong></p>
+        <p>💳 Cartão: <strong>R$ {{ "%.2f"|format(total_cartao) }}</strong></p>
+        <hr>
+        <h2>Total do mês: R$ {{ "%.2f"|format(total_mes) }}</h2>
+    </div>
+
+    <ul class="lista">
+        {% for c in caixa %}
+        <li>{{ c[1] }} - R$ {{ "%.2f"|format(c[2]) }} ({{ c[4] }})</li>
+        {% endfor %}
+    </ul>
 </div>
 
 </div>
-
 </body>
 </html>
