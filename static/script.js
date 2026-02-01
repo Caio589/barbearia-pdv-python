@@ -1,17 +1,16 @@
 function showPage(pageId) {
-  // esconde todas as páginas
-  document.querySelectorAll(".page").forEach(page => {
-    page.classList.add("hidden");
+  const pages = document.querySelectorAll(".page");
+
+  pages.forEach(p => {
+    p.style.display = "none";
   });
 
-  // mostra a página clicada
   const page = document.getElementById(pageId);
   if (page) {
-    page.classList.remove("hidden");
+    page.style.display = "block";
   }
 }
 
-// abre o PDV automaticamente
-document.addEventListener("DOMContentLoaded", () => {
+window.onload = function () {
   showPage("pdv");
-});
+};
