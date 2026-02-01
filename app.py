@@ -32,7 +32,6 @@ def home():
     c.execute("SELECT aberto FROM caixa_status WHERE id=1")
     aberto = c.fetchone()[0]
 
-    # -------- RELATÓRIO MENSAL --------
     mes = datetime.now().strftime("%Y-%m")
 
     def total_pagamento(p):
@@ -69,20 +68,19 @@ def home():
 # ---------------- CAIXA ----------------
 @app.route("/abrir_caixa", methods=["POST"])
 def abrir_caixa():
+    saldo = request.form.get("saldo", "0").replace(",", ".")
     try:
-        saldo = float(request.form.get("saldo", "0").replace(",", "."))
+        saldo = float(saldo)
     except:
         saldo = 0.0
 
     con = conectar()
     c = con.cursor()
-
     c.execute("UPDATE caixa_status SET aberto=1, saldo_inicial=?", (saldo,))
     c.execute("""
         INSERT INTO caixa (descricao, valor, tipo, pagamento)
         VALUES ('Abertura de Caixa', ?, 'entrada', 'Dinheiro')
     """, (saldo,))
-
     con.commit()
     con.close()
     return redirect("/")
@@ -106,11 +104,11 @@ def preco(tipo, item_id):
     else:
         c.execute("SELECT preco FROM produtos WHERE id=?", (item_id,))
 
-    preco = c.fetchone()[0]
+    row = c.fetchone()
     con.close()
-    return jsonify(preco)
+    return jsonify(row[0] if row else 0)
 
-# ---------------- VENDA INTELIGENTE ----------------
+# ---------------- VENDA ----------------
 @app.route("/venda", methods=["POST"])
 def venda():
     tipo = request.form.get("tipo")
@@ -133,7 +131,12 @@ def venda():
     else:
         c.execute("SELECT nome, preco FROM produtos WHERE id=?", (item_id,))
 
-    nome, preco = c.fetchone()
+    row = c.fetchone()
+    if not row:
+        con.close()
+        return redirect("/")
+
+    nome, preco = row
 
     c.execute("""
         INSERT INTO caixa (descricao, valor, tipo, pagamento)
@@ -144,17 +147,30 @@ def venda():
     con.close()
     return redirect("/")
 
-# ---------------- PLANOS ----------------
+# ---------------- PLANOS (CORRIGIDO) ----------------
 @app.route("/add_plano", methods=["POST"])
 def add_plano():
+    nome = request.form.get("nome")
+    valor = request.form.get("valor")
+    limite = request.form.get("limite", "0")
+
+    if not nome or not valor:
+        return redirect("/")
+
+    try:
+        valor = float(valor.replace(",", "."))
+    except:
+        valor = 0.0
+
+    try:
+        limite = int(limite)
+    except:
+        limite = 0
+
     con = conectar()
     con.cursor().execute(
         "INSERT INTO planos (nome, valor, limite) VALUES (?,?,?)",
-        (
-            request.form["nome"],
-            request.form["valor"].replace(",", "."),
-            request.form["limite"]
-        )
+        (nome, valor, limite)
     )
     con.commit()
     con.close()
@@ -162,9 +178,12 @@ def add_plano():
 
 @app.route("/ativar_plano", methods=["POST"])
 def ativar_plano():
-    cliente_id = request.form["cliente"]
-    plano_id = request.form["plano"]
-    pagamento = request.form["pagamento"]
+    cliente_id = request.form.get("cliente")
+    plano_id = request.form.get("plano")
+    pagamento = request.form.get("pagamento", "Dinheiro")
+
+    if not cliente_id or not plano_id:
+        return redirect("/")
 
     con = conectar()
     c = con.cursor()
@@ -174,6 +193,10 @@ def ativar_plano():
 
     c.execute("SELECT nome FROM clientes WHERE id=?", (cliente_id,))
     cliente = c.fetchone()
+
+    if not plano or not cliente:
+        con.close()
+        return redirect("/")
 
     c.execute("""
         UPDATE clientes
@@ -192,16 +215,19 @@ def ativar_plano():
 
 @app.route("/usar_plano", methods=["POST"])
 def usar_plano():
-    cliente_id = request.form["cliente"]
-    servico_id = request.form["servico"]
+    cliente_id = request.form.get("cliente")
+    servico_id = request.form.get("servico")
+
+    if not cliente_id or not servico_id:
+        return redirect("/")
 
     con = conectar()
     c = con.cursor()
 
     c.execute("SELECT saldo_plano FROM clientes WHERE id=?", (cliente_id,))
-    saldo = c.fetchone()[0]
+    row = c.fetchone()
 
-    if saldo <= 0:
+    if not row or row[0] <= 0:
         con.close()
         return redirect("/")
 
@@ -234,7 +260,6 @@ def relatorio_pdf():
         AND strftime('%Y-%m', data)=?
     """, (mes,))
     dados = c.fetchall()
-
     con.close()
 
     buffer = io.BytesIO()
@@ -242,17 +267,20 @@ def relatorio_pdf():
     w, h = A4
 
     pdf.setFont("Helvetica-Bold", 16)
-    pdf.drawString(50, h-50, "Relatório Mensal - Barbearia")
+    pdf.drawString(50, h - 50, "Relatório Mensal - Barbearia")
 
-    y = h-90
+    y = h - 90
     pdf.setFont("Helvetica", 10)
     for d in dados:
         pdf.drawString(50, y, f"{d[3][:10]} | {d[0]} | R$ {d[1]:.2f} | {d[2]}")
         y -= 14
         if y < 40:
             pdf.showPage()
-            y = h-50
+            y = h - 50
 
     pdf.save()
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name="relatorio_mensal.pdf")
+
+if __name__ == "__main__":
+    app.run(debug=True)
