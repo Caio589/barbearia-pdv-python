@@ -1,16 +1,20 @@
-function showPage(pageId) {
-  const pages = document.querySelectorAll(".page");
-
-  pages.forEach(p => {
-    p.style.display = "none";
-  });
-
-  const page = document.getElementById(pageId);
-  if (page) {
-    page.style.display = "block";
-  }
+function addCliente(){
+  fetch("/clientes",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({nome:cliente.value})
+  })
 }
 
-window.onload = function () {
-  showPage("pdv");
-};
+function agendar(){
+  fetch("/agenda",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      cliente:ag_cliente.value,
+      servico:ag_servico.value,
+      data:ag_data.value,
+      hora:ag_hora.value
+    })
+  })
+}
