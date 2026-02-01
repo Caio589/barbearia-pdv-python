@@ -49,6 +49,15 @@ def criar_tabelas():
     """)
 
     cursor.execute("""
+    CREATE TABLE IF NOT EXISTS uso_plano (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cliente_id INTEGER,
+        servico_id INTEGER,
+        data DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS caixa (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         descricao TEXT,
