@@ -29,6 +29,7 @@ def criar_tabelas():
         cliente_id INTEGER,
         servico_id INTEGER,
         valor REAL,
+        pagamento TEXT,
         data DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
@@ -39,6 +40,7 @@ def criar_tabelas():
         descricao TEXT,
         valor REAL,
         tipo TEXT,
+        pagamento TEXT,
         data DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
