@@ -7,6 +7,8 @@
 </head>
 <body>
 
+<div class="overlay"></div>
+
 <div class="container">
     <h1>💈 Barbearia</h1>
 
@@ -39,10 +41,10 @@
     <hr>
 
     <h2>Resumo do Dia</h2>
-    <ul>
-        <li>💵 Dinheiro: R$ {{ "%.2f"|format(pagamentos["Dinheiro"]) }}</li>
-        <li>📲 Pix: R$ {{ "%.2f"|format(pagamentos["Pix"]) }}</li>
-        <li>💳 Cartão: R$ {{ "%.2f"|format(pagamentos["Cartão"]) }}</li>
+    <ul class="resumo">
+        <li>💵 Dinheiro: <strong>R$ {{ "%.2f"|format(pagamentos["Dinheiro"]) }}</strong></li>
+        <li>📲 Pix: <strong>R$ {{ "%.2f"|format(pagamentos["Pix"]) }}</strong></li>
+        <li>💳 Cartão: <strong>R$ {{ "%.2f"|format(pagamentos["Cartão"]) }}</strong></li>
     </ul>
 
     <a href="/exportar_csv" class="btn">📄 Exportar CSV</a>
@@ -53,7 +55,7 @@
     <ul class="lista">
         {% for c in caixa %}
         <li>
-            {{ c[1] }} — R$ {{ "%.2f"|format(c[2]) }} | {{ c[4] }}
+            {{ c[1] }} — <strong>R$ {{ "%.2f"|format(c[2]) }}</strong> | {{ c[4] }}
         </li>
         {% endfor %}
     </ul>
