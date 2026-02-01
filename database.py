@@ -1,7 +1,7 @@
 import psycopg2
 import os
 
-DATABASE_URL = os.environ.get postgresql://barbearia_db_k3da_user:Qc72SeyRPeoVVYvLDTRytgqJmkSbg5h2@dpg-d5vqldh4tr6s73a0dtr0-a/barbearia_db_k3da
+DATABASE_URL = os.environ.getpostgresql://barbearia_db_k3da_user:Qc72SeyRPeoVVYvLDTRytgqJmkSbg5h2@dpg-d5vqldh4tr6s73a0dtr0-a/barbearia_db_k3da
 
 def conectar():
     if not DATABASE_URL:
