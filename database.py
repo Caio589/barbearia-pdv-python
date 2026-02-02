@@ -89,5 +89,17 @@ def criar_tabelas_e_colunas(conn):
         )
     """)
 
+        # ======================
+    # PRODUTOS
+    # ======================
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS produtos (
+            id SERIAL PRIMARY KEY,
+            nome VARCHAR(100),
+            valor NUMERIC(10,2),
+            estoque INTEGER DEFAULT 0
+        )
+    """)
+
     conn.commit()
     cur.close()
