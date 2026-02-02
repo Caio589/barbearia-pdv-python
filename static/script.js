@@ -78,5 +78,48 @@ function venderPlano() {
         })
     }).then(r=>r.json()).then(alert);
 }
+/* CONTROLE DE TELAS */
+function mostrarTela(id) {
+    document.querySelectorAll(".tela").forEach(tela => {
+        tela.style.display = "none";
+    });
+    document.getElementById(id).style.display = "block";
+}
+
+/* TELA PADRÃO */
+document.addEventListener("DOMContentLoaded", () => {
+    mostrarTela("clientes");
+});
+
+/* =======================
+   PLANOS
+======================= */
+
+function criarPlano() {
+    fetch("/planos", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            nome: document.getElementById("nomePlano").value,
+            usos: document.getElementById("usosPlano").value,
+            valor: document.getElementById("valorPlano").value
+        })
+    })
+    .then(r => r.json())
+    .then(d => alert(d.msg || d.erro));
+}
+
+function venderPlano() {
+    fetch("/vender_plano", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            cliente_id: document.getElementById("clientePlano").value,
+            plano_id: document.getElementById("planoID").value
+        })
+    })
+    .then(r => r.json())
+    .then(d => alert(d.msg || d.erro));
+}
 
 function fecharCaixa(){ alert("Caixa fechado"); }
