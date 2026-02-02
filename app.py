@@ -77,23 +77,28 @@ def abrir_caixa():
     cur = conn.cursor()
 
     try:
-        dados = request.get_json()
-        valor = dados["valor"]
+        dados = request.get_json(silent=True)
+        if not dados or "valor" not in dados:
+            return jsonify({"msg": "Valor de abertura inválido"}), 400
+
+        # 🔥 CONVERSÃO IMPORTANTE
+        valor = float(dados["valor"])
 
         cur.execute("SELECT id FROM caixa WHERE aberto=true")
         if cur.fetchone():
             return jsonify({"msg": "Já existe um caixa aberto"})
 
         cur.execute(
-            "INSERT INTO caixa (abertura, aberto) VALUES (%s,true)",
+            "INSERT INTO caixa (abertura, aberto) VALUES (%s, true)",
             (valor,)
         )
         conn.commit()
-        return jsonify({"msg": "Caixa aberto"})
+
+        return jsonify({"msg": "Caixa aberto com sucesso"})
 
     except Exception as e:
         print("ERRO /abrir_caixa:", e)
-        return jsonify({"msg": "Erro ao abrir caixa"})
+        return jsonify({"msg": "Erro ao abrir caixa"}), 500
 
     finally:
         cur.close()
