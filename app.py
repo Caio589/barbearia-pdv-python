@@ -3,9 +3,6 @@ from database import get_db_connection
 
 app = Flask(__name__)
 
-# ======================
-# HOME
-# ======================
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -22,22 +19,22 @@ def clientes():
         if request.method == "POST":
             dados = request.json
             cur.execute(
-                "INSERT INTO clientes (nome, telefone) VALUES (%s, %s)",
+                "INSERT INTO clientes (nome, telefone) VALUES (%s,%s)",
                 (dados["nome"], dados["telefone"])
             )
             conn.commit()
-            return jsonify({"msg": "Cliente cadastrado com sucesso"})
+            return jsonify({"msg": "Cliente cadastrado"})
 
         cur.execute("SELECT id, nome, telefone FROM clientes ORDER BY id DESC")
-        clientes = cur.fetchall()
-        return jsonify(clientes)
+        return jsonify(cur.fetchall())
 
     except Exception as e:
         print("ERRO /clientes:", e)
-        return jsonify({"erro": str(e)}), 500
+        return jsonify([])  # ⚠️ sempre lista
 
     finally:
         cur.close()
+        conn.close()
 
 # ======================
 # SERVIÇOS
@@ -51,25 +48,22 @@ def servicos():
         if request.method == "POST":
             dados = request.json
             cur.execute(
-                "INSERT INTO servicos (nome, valor) VALUES (%s, %s)",
+                "INSERT INTO servicos (nome, valor) VALUES (%s,%s)",
                 (dados["nome"], dados["valor"])
             )
             conn.commit()
-            return jsonify({"msg": "Serviço cadastrado com sucesso"})
+            return jsonify({"msg": "Serviço cadastrado"})
 
         cur.execute("SELECT id, nome, valor FROM servicos ORDER BY id DESC")
-        servicos = cur.fetchall()
-        return jsonify(servicos)
+        return jsonify(cur.fetchall())
 
     except Exception as e:
         print("ERRO /servicos:", e)
-        return jsonify({"erro": str(e)}), 500
+        return jsonify([])  # ⚠️ SEMPRE lista
 
     finally:
         cur.close()
+        conn.close()
 
-# ======================
-# START
-# ======================
 if __name__ == "__main__":
     app.run(debug=True)
