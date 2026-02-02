@@ -1,17 +1,21 @@
 import psycopg2
 import os
 
-_conn = None  # conexão única
+_tabelas_criadas = False
 
 def get_db_connection():
-    global _conn
-    if _conn is None:
-        _conn = psycopg2.connect(
-            os.environ["DATABASE_URL"],
-            sslmode="require"
-        )
-        criar_tabelas(_conn)
-    return _conn
+    global _tabelas_criadas
+
+    conn = psycopg2.connect(
+        os.environ["DATABASE_URL"],
+        sslmode="require"
+    )
+
+    if not _tabelas_criadas:
+        criar_tabelas(conn)
+        _tabelas_criadas = True
+
+    return conn
 
 
 def criar_tabelas(conn):
