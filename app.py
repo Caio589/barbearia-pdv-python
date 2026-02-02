@@ -32,5 +32,30 @@ def clientes():
     conn.close()
     return jsonify(lista)
 
+# ======================
+# SERVIÇOS
+# ======================
+@app.route("/servicos", methods=["GET", "POST"])
+def servicos():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    if request.method == "POST":
+        dados = request.json
+        cur.execute(
+            "INSERT INTO servicos (nome, valor) VALUES (%s,%s)",
+            (dados["nome"], dados["valor"])
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"msg": "Serviço cadastrado"})
+
+    cur.execute("SELECT id, nome, valor FROM servicos ORDER BY id DESC")
+    lista = cur.fetchall()
+    cur.close()
+    conn.close()
+    return jsonify(lista)
+
 if __name__ == "__main__":
     app.run(debug=True)
