@@ -8,9 +8,58 @@ def index():
     return render_template("index.html")
 
 # ======================
+# CLIENTES
+# ======================
+@app.route("/clientes", methods=["GET", "POST"])
+def clientes():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        if request.method == "POST":
+            dados = request.json
+            cur.execute(
+                "INSERT INTO clientes (nome, telefone) VALUES (%s,%s)",
+                (dados["nome"], dados["telefone"])
+            )
+            conn.commit()
+            return jsonify({"msg": "Cliente cadastrado"})
+
+        cur.execute("SELECT id, nome, telefone FROM clientes ORDER BY id DESC")
+        return jsonify(cur.fetchall())
+
+    finally:
+        cur.close()
+        conn.close()
+
+# ======================
+# SERVIÇOS
+# ======================
+@app.route("/servicos", methods=["GET", "POST"])
+def servicos():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        if request.method == "POST":
+            dados = request.json
+            cur.execute(
+                "INSERT INTO servicos (nome, valor) VALUES (%s,%s)",
+                (dados["nome"], dados["valor"])
+            )
+            conn.commit()
+            return jsonify({"msg": "Serviço cadastrado"})
+
+        cur.execute("SELECT id, nome, valor FROM servicos ORDER BY id DESC")
+        return jsonify(cur.fetchall())
+
+    finally:
+        cur.close()
+        conn.close()
+
+# ======================
 # CAIXA
 # ======================
-
 @app.route("/abrir_caixa", methods=["POST"])
 def abrir_caixa():
     conn = get_db_connection()
@@ -25,7 +74,7 @@ def abrir_caixa():
         return jsonify({"msg": "Já existe um caixa aberto"})
 
     cur.execute(
-        "INSERT INTO caixa (abertura, aberto) VALUES (%s, true)",
+        "INSERT INTO caixa (abertura, aberto) VALUES (%s,true)",
         (valor,)
     )
     conn.commit()
@@ -33,7 +82,6 @@ def abrir_caixa():
     cur.close()
     conn.close()
     return jsonify({"msg": "Caixa aberto"})
-
 
 @app.route("/movimentacao", methods=["POST"])
 def movimentacao():
@@ -51,15 +99,13 @@ def movimentacao():
 
     cur.execute("""
         INSERT INTO movimentacoes (caixa_id, valor, forma_pagamento)
-        VALUES (%s, %s, %s)
+        VALUES (%s,%s,%s)
     """, (caixa[0], dados["valor"], dados["forma"]))
 
     conn.commit()
     cur.close()
     conn.close()
-
     return jsonify({"msg": "Entrada registrada"})
-
 
 @app.route("/fechar_caixa")
 def fechar_caixa():
@@ -84,11 +130,10 @@ def fechar_caixa():
 
     totais = cur.fetchall()
     total = float(abertura)
-
-    resultado = {"abertura": float(abertura)}
+    resumo = {"abertura": float(abertura)}
 
     for forma, valor in totais:
-        resultado[forma] = float(valor)
+        resumo[forma] = float(valor)
         total += float(valor)
 
     cur.execute("UPDATE caixa SET aberto=false WHERE id=%s", (caixa_id,))
@@ -97,9 +142,8 @@ def fechar_caixa():
     cur.close()
     conn.close()
 
-    resultado["total"] = total
-    return jsonify(resultado)
-
+    resumo["total"] = total
+    return jsonify(resumo)
 
 if __name__ == "__main__":
     app.run(debug=True)
