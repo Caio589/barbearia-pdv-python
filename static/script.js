@@ -64,7 +64,7 @@ function abrirCaixa() {
     fetch("/abrir_caixa", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({valor:valorAbertura.value})
+       body: JSON.stringify({ valor: valorAbertura.value || 0 })
     }).then(r=>r.json()).then(d=>alert(d.msg));
 }
 
