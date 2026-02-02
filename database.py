@@ -77,5 +77,17 @@ def criar_tabelas_e_colunas(conn):
         )
     """)
 
+        # ======================
+    # PLANOS
+    # ======================
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS planos (
+            id SERIAL PRIMARY KEY,
+            nome VARCHAR(100),
+            valor NUMERIC(10,2),
+            quantidade INTEGER
+        )
+    """)
+
     conn.commit()
     cur.close()
