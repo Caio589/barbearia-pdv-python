@@ -7,32 +7,37 @@
 </head>
 <body>
 
-<!-- FUNDO BARBEARIA -->
 <div class="background"></div>
 
-<!-- MENU LATERAL -->
 <div class="sidebar">
     <button onclick="mostrarTela('inicio')" title="Início">🏠</button>
     <button onclick="mostrarTela('clientes')" title="Clientes">👤</button>
+    <button onclick="mostrarTela('servicos')" title="Serviços">✂️</button>
 </div>
 
-<!-- CONTEÚDO -->
 <div class="content">
 
     <section id="inicio" class="tela">
         <h1>Barbearia</h1>
-        <p>Sistema profissional de gestão</p>
+        <p>Sistema profissional</p>
     </section>
 
-    <!-- CLIENTES -->
     <section id="clientes" class="tela">
         <h2>Clientes</h2>
-
-        <input id="nomeCliente" placeholder="Nome do cliente">
+        <input id="nomeCliente" placeholder="Nome">
         <input id="telCliente" placeholder="Telefone">
         <button onclick="salvarCliente()">Adicionar</button>
-
         <ul id="listaClientes"></ul>
+    </section>
+
+    <section id="servicos" class="tela">
+        <h2>Serviços</h2>
+
+        <input id="nomeServico" placeholder="Nome do serviço">
+        <input id="valorServico" placeholder="Valor (R$)">
+        <button onclick="salvarServico()">Salvar serviço</button>
+
+        <ul id="listaServicos"></ul>
     </section>
 
 </div>
