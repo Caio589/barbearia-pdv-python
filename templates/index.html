@@ -7,16 +7,13 @@
 </head>
 <body>
 
-<!-- FUNDO COM FOTO -->
+<!-- FUNDO BARBEARIA -->
 <div class="background"></div>
 
 <!-- MENU LATERAL -->
 <div class="sidebar">
     <button onclick="mostrarTela('inicio')" title="Início">🏠</button>
     <button onclick="mostrarTela('clientes')" title="Clientes">👤</button>
-    <button onclick="mostrarTela('servicos')" title="Serviços">✂️</button>
-    <button onclick="mostrarTela('agenda')" title="Agenda">📅</button>
-    <button onclick="mostrarTela('planos')" title="Planos">📦</button>
 </div>
 
 <!-- CONTEÚDO -->
@@ -27,24 +24,15 @@
         <p>Sistema profissional de gestão</p>
     </section>
 
+    <!-- CLIENTES -->
     <section id="clientes" class="tela">
         <h2>Clientes</h2>
-        <p>Módulo em construção</p>
-    </section>
 
-    <section id="servicos" class="tela">
-        <h2>Serviços</h2>
-        <p>Módulo em construção</p>
-    </section>
+        <input id="nomeCliente" placeholder="Nome do cliente">
+        <input id="telCliente" placeholder="Telefone">
+        <button onclick="salvarCliente()">Adicionar</button>
 
-    <section id="agenda" class="tela">
-        <h2>Agenda</h2>
-        <p>Apenas agendamentos</p>
-    </section>
-
-    <section id="planos" class="tela">
-        <h2>Planos</h2>
-        <p>Módulo de planos</p>
+        <ul id="listaClientes"></ul>
     </section>
 
 </div>
