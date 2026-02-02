@@ -93,3 +93,38 @@ function fecharCaixa() {
             resumoCaixa.innerText=txt;
         });
 }
+function salvarPlano() {
+    fetch("/planos", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            nome: nomePlano.value,
+            valor: valorPlano.value,
+            quantidade: qtdPlano.value
+        })
+    })
+    .then(r => r.json())
+    .then(d => {
+        alert(d.msg);
+        nomePlano.value = "";
+        valorPlano.value = "";
+        qtdPlano.value = "";
+        carregarPlanos();
+    });
+}
+
+function carregarPlanos() {
+    fetch("/planos")
+        .then(r => r.json())
+        .then(lista => {
+            if (!Array.isArray(lista)) return;
+            listaPlanos.innerHTML = "";
+            lista.forEach(p => {
+                const li = document.createElement("li");
+                li.innerText = `${p[1]} — R$ ${p[2]} (${p[3]} usos)`;
+                listaPlanos.appendChild(li);
+            });
+        });
+}
+
+document.addEventListener("DOMContentLoaded", carregarPlanos);
