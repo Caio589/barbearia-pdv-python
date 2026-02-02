@@ -180,3 +180,32 @@ def fechar_caixa():
 
 if __name__ == "__main__":
     app.run(debug=True)
+    # ======================
+# PLANOS
+# ======================
+@app.route("/planos", methods=["GET", "POST"])
+def planos():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        if request.method == "POST":
+            dados = request.get_json()
+            cur.execute(
+                "INSERT INTO planos (nome, valor, quantidade) VALUES (%s,%s,%s)",
+                (dados["nome"], dados["valor"], dados["quantidade"])
+            )
+            conn.commit()
+            return jsonify({"msg": "Plano criado com sucesso"})
+
+        cur.execute("SELECT id, nome, valor, quantidade FROM planos ORDER BY id DESC")
+        return jsonify(cur.fetchall())
+
+    except Exception as e:
+        print("ERRO /planos:", e)
+        return jsonify([])
+
+    finally:
+        cur.close()
+        conn.close()
+
