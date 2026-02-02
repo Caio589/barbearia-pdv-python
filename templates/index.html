@@ -6,28 +6,45 @@
 </head>
 <body>
 
-<button onclick="mostrarTela('caixa')">💰 Caixa</button>
+<button onclick="mostrarTela('clientes')">Clientes</button>
+<button onclick="mostrarTela('servicos')">Serviços</button>
+<button onclick="mostrarTela('caixa')">Caixa</button>
 
-<section id="caixa">
+<section id="clientes" class="tela">
+    <h2>Clientes</h2>
+    <input id="nomeCliente" placeholder="Nome">
+    <input id="telCliente" placeholder="Telefone">
+    <button onclick="salvarCliente()">Salvar</button>
+    <ul id="listaClientes"></ul>
+</section>
+
+<section id="servicos" class="tela">
+    <h2>Serviços</h2>
+    <input id="nomeServico" placeholder="Nome">
+    <input id="valorServico" placeholder="Valor">
+    <button onclick="salvarServico()">Salvar</button>
+    <ul id="listaServicos"></ul>
+</section>
+
+<section id="caixa" class="tela">
     <h2>Caixa</h2>
 
-    <input id="valorAbertura" placeholder="Valor inicial em caixa">
+    <input id="valorAbertura" placeholder="Valor inicial">
     <button onclick="abrirCaixa()">Abrir caixa</button>
 
     <hr>
 
-    <input id="valorMov" placeholder="Valor da entrada">
+    <input id="valorMov" placeholder="Valor entrada">
     <select id="formaMov">
         <option value="dinheiro">Dinheiro</option>
         <option value="pix">Pix</option>
         <option value="cartao">Cartão</option>
     </select>
-    <button onclick="registrarMov()">Registrar entrada</button>
+    <button onclick="registrarMov()">Registrar</button>
 
     <hr>
 
     <button onclick="fecharCaixa()">Fechar caixa</button>
-
     <pre id="resumoCaixa"></pre>
 </section>
 
