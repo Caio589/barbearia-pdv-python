@@ -205,6 +205,35 @@ def planos():
         print("ERRO /planos:", e)
         return jsonify([])
 
+    # ======================
+# PRODUTOS
+# ======================
+@app.route("/produtos", methods=["GET", "POST"])
+def produtos():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        if request.method == "POST":
+            dados = request.get_json()
+            cur.execute(
+                "INSERT INTO produtos (nome, valor, estoque) VALUES (%s,%s,%s)",
+                (dados["nome"], dados["valor"], dados["estoque"])
+            )
+            conn.commit()
+            return jsonify({"msg": "Produto cadastrado com sucesso"})
+
+        cur.execute("SELECT id, nome, valor, estoque FROM produtos ORDER BY id DESC")
+        return jsonify(cur.fetchall())
+
+    except Exception as e:
+        print("ERRO /produtos:", e)
+        return jsonify([])
+
+    finally:
+        cur.close()
+        conn.close()
+
     finally:
         cur.close()
         conn.close()
