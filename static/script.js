@@ -56,4 +56,27 @@ carregarAgenda();
 
 // CAIXA (placeholder)
 function abrirCaixa(){ alert("Caixa aberto"); }
+function criarPlano() {
+    fetch("/planos", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            nome: nomePlano.value,
+            usos: usosPlano.value,
+            valor: valorPlano.value
+        })
+    }).then(r=>r.json()).then(alert);
+}
+
+function venderPlano() {
+    fetch("/vender_plano", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            cliente_id: clientePlano.value,
+            plano_id: planoID.value
+        })
+    }).then(r=>r.json()).then(alert);
+}
+
 function fecharCaixa(){ alert("Caixa fechado"); }
