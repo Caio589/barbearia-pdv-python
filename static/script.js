@@ -64,6 +64,7 @@ function carregarServicos() {
     fetch("/servicos")
         .then(r => r.json())
         .then(lista => {
+            if (!Array.isArray(lista)) return; // blindagem
             listaServicos.innerHTML = "";
             lista.forEach(s => {
                 const li = document.createElement("li");
