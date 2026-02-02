@@ -4,28 +4,27 @@
 
 body {
     margin: 0;
-    font-family: 'Arial', sans-serif;
-    color: #fff;
+    font-family: Arial, sans-serif;
     background: #000;
-    overflow-x: hidden;
+    color: #fff;
 }
 
-/* FUNDO COM IMAGEM */
+/* FUNDO BARBEARIA REAL */
 .background {
     position: fixed;
     inset: 0;
-    background-image: url("https://images.unsplash.com/photo-1519741497674-611481863552");
+    background-image: url("https://images.unsplash.com/photo-1517832606294-8b35c7b6f9a0");
     background-size: cover;
     background-position: center;
-    opacity: 0.15;
+    opacity: 0.18;
     z-index: -1;
 }
 
 /* MENU LATERAL */
 .sidebar {
     position: fixed;
-    top: 0;
     left: 0;
+    top: 0;
     width: 70px;
     height: 100vh;
     background: #0b0b0b;
@@ -35,7 +34,7 @@ body {
     padding-top: 20px;
 }
 
-/* BOTÕES COM EFEITO FLUTUANTE */
+/* ÍCONES ESCUROS COM EFEITO */
 .sidebar button {
     background: #111;
     border: none;
@@ -65,14 +64,28 @@ body {
 /* TELAS */
 .tela {
     display: none;
-    animation: fade 0.3s ease-in-out;
-}
-
-@keyframes fade {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
 }
 
 h1, h2 {
     color: #f1c40f;
+}
+
+/* FORM */
+input, button {
+    display: block;
+    margin: 8px 0;
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+}
+
+button {
+    background: #f1c40f;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
 }
