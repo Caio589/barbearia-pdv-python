@@ -1,61 +1,12 @@
-function mostrar(id) {
-  document.querySelectorAll(".aba").forEach(a => a.style.display = "none");
-  document.getElementById(id).style.display = "block";
+function mostrarTela(id) {
+    document.querySelectorAll(".tela").forEach(t => t.style.display = "none");
+    document.getElementById(id).style.display = "block";
 }
 
-// mostrar aba inicial
-mostrar("clientes");
+document.addEventListener("DOMContentLoaded", () => {
+    mostrarTela("clientes");
+});
 
-// CLIENTES
-function addCliente(){
-  fetch("/clientes",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({nome:cliente.value})
-  }).then(()=>carregarClientes());
-}
-
-function carregarClientes(){
-  fetch("/clientes")
-    .then(r=>r.json())
-    .then(d=>{
-      listaClientes.innerHTML="";
-      d.forEach(c=>{
-        listaClientes.innerHTML+=`<li>${c[1]}</li>`;
-      });
-    });
-}
-carregarClientes();
-
-// AGENDA
-function agendar(){
-  fetch("/agenda",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      cliente:ag_cliente.value,
-      servico:ag_servico.value,
-      data:ag_data.value,
-      hora:ag_hora.value
-    })
-  }).then(()=>carregarAgenda());
-}
-
-function carregarAgenda(){
-  fetch("/agenda")
-    .then(r=>r.json())
-    .then(d=>{
-      listaAgenda.innerHTML="";
-      d.forEach(a=>{
-        listaAgenda.innerHTML+=
-          `<li>${a[1]} - ${a[2]} (${a[3]} ${a[4]})</li>`;
-      });
-    });
-}
-carregarAgenda();
-
-// CAIXA (placeholder)
-function abrirCaixa(){ alert("Caixa aberto"); }
 function criarPlano() {
     fetch("/planos", {
         method: "POST",
@@ -65,7 +16,9 @@ function criarPlano() {
             usos: usosPlano.value,
             valor: valorPlano.value
         })
-    }).then(r=>r.json()).then(alert);
+    })
+    .then(r => r.json())
+    .then(d => alert(d.msg || d.erro));
 }
 
 function venderPlano() {
@@ -76,50 +29,22 @@ function venderPlano() {
             cliente_id: clientePlano.value,
             plano_id: planoID.value
         })
-    }).then(r=>r.json()).then(alert);
+    })
+    .then(r => r.json())
+    .then(d => alert(d.msg || d.erro));
 }
-/* CONTROLE DE TELAS */
-function mostrarTela(id) {
-    document.querySelectorAll(".tela").forEach(tela => {
-        tela.style.display = "none";
+
+function usarPlano() {
+    fetch("/usar_plano", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            cliente_id: clienteUsoPlano.value
+        })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.erro) alert(d.erro);
+        else alert(`✔ ${d.msg}\nUsos restantes: ${d.usos_restantes}`);
     });
-    document.getElementById(id).style.display = "block";
 }
-
-/* TELA PADRÃO */
-document.addEventListener("DOMContentLoaded", () => {
-    mostrarTela("clientes");
-});
-
-/* =======================
-   PLANOS
-======================= */
-
-function criarPlano() {
-    fetch("/planos", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            nome: document.getElementById("nomePlano").value,
-            usos: document.getElementById("usosPlano").value,
-            valor: document.getElementById("valorPlano").value
-        })
-    })
-    .then(r => r.json())
-    .then(d => alert(d.msg || d.erro));
-}
-
-function venderPlano() {
-    fetch("/vender_plano", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            cliente_id: document.getElementById("clientePlano").value,
-            plano_id: document.getElementById("planoID").value
-        })
-    })
-    .then(r => r.json())
-    .then(d => alert(d.msg || d.erro));
-}
-
-function fecharCaixa(){ alert("Caixa fechado"); }
