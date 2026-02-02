@@ -1,63 +1,78 @@
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
-    background: #111;
+    font-family: 'Arial', sans-serif;
     color: #fff;
+    background: #000;
+    overflow-x: hidden;
+}
+
+/* FUNDO COM IMAGEM */
+.background {
+    position: fixed;
+    inset: 0;
+    background-image: url("https://images.unsplash.com/photo-1519741497674-611481863552");
+    background-size: cover;
+    background-position: center;
+    opacity: 0.15;
+    z-index: -1;
 }
 
 /* MENU LATERAL */
 .sidebar {
     position: fixed;
-    left: 0;
     top: 0;
+    left: 0;
     width: 70px;
     height: 100vh;
-    background: #000;
+    background: #0b0b0b;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-top: 15px;
+    padding-top: 20px;
 }
 
+/* BOTÕES COM EFEITO FLUTUANTE */
 .sidebar button {
     background: #111;
     border: none;
     color: #aaa;
     font-size: 22px;
-    width: 45px;
-    height: 45px;
-    margin: 10px 0;
-    border-radius: 10px;
+    width: 48px;
+    height: 48px;
+    margin: 12px 0;
+    border-radius: 12px;
     cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.6);
 }
 
 .sidebar button:hover {
-    background: #222;
     color: #f1c40f;
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(241,196,15,0.4);
 }
 
 /* CONTEÚDO */
 .content {
-    margin-left: 80px;
-    padding: 20px;
+    margin-left: 90px;
+    padding: 30px;
 }
 
 /* TELAS */
 .tela {
     display: none;
+    animation: fade 0.3s ease-in-out;
 }
 
-/* INPUTS */
-input, button {
-    display: block;
-    margin: 8px 0;
-    padding: 8px;
-    border-radius: 6px;
-    border: none;
+@keyframes fade {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-button {
-    background: #f1c40f;
-    font-weight: bold;
-    cursor: pointer;
+h1, h2 {
+    color: #f1c40f;
 }
