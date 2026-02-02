@@ -7,9 +7,10 @@
 <body>
 
 <button onclick="mostrarTela('clientes')">Clientes</button>
-<button onclick="mostrarTela('servicos')">Serviços</button>
 <button onclick="mostrarTela('caixa')">Caixa</button>
 <button onclick="mostrarTela('planos')" title="Planos">📦</button>
+<button onclick="mostrarTela('servicos')" title="Serviços">✂️</button>
+<button onclick="mostrarTela('produtos')" title="Produtos">🧴</button>
 
 <section id="clientes" class="tela">
     <h2>Clientes</h2>
@@ -25,6 +26,18 @@
     <input id="valorServico" placeholder="Valor">
     <button onclick="salvarServico()">Salvar</button>
     <ul id="listaServicos"></ul>
+</section>
+
+    <section id="produtos" class="tela">
+    <h2>Produtos</h2>
+
+    <input id="nomeProduto" placeholder="Nome do produto">
+    <input id="valorProduto" placeholder="Valor do produto">
+    <input id="estoqueProduto" placeholder="Estoque inicial">
+
+    <button onclick="salvarProduto()">Salvar produto</button>
+
+    <ul id="listaProdutos"></ul>
 </section>
 
 <section id="caixa" class="tela">
