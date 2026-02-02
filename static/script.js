@@ -1,75 +1,37 @@
-function mostrarTela(id) {
-    document.querySelectorAll(".tela").forEach(t => t.style.display = "none");
-    document.getElementById(id).style.display = "block";
+function abrirCaixa() {
+    fetch("/abrir_caixa", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ valor: valorAbertura.value })
+    })
+    .then(r => r.json())
+    .then(d => alert(d.msg));
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    mostrarTela("inicio");
-    carregarClientes();
-    carregarServicos();
-});
-
-/* CLIENTES */
-function salvarCliente() {
-    fetch("/clientes", {
+function registrarMov() {
+    fetch("/movimentacao", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
-            nome: nomeCliente.value,
-            telefone: telCliente.value
+            valor: valorMov.value,
+            forma: formaMov.value
         })
     })
     .then(r => r.json())
-    .then(d => {
-        alert(d.msg);
-        nomeCliente.value = "";
-        telCliente.value = "";
-        carregarClientes();
-    });
+    .then(d => alert(d.msg));
 }
 
-function carregarClientes() {
-    fetch("/clientes")
+function fecharCaixa() {
+    fetch("/fechar_caixa")
         .then(r => r.json())
-        .then(lista => {
-            listaClientes.innerHTML = "";
-            lista.forEach(c => {
-                const li = document.createElement("li");
-                li.innerText = `${c[1]} — ${c[2]}`;
-                listaClientes.appendChild(li);
-            });
-        });
-}
-
-/* SERVIÇOS */
-function salvarServico() {
-    fetch("/servicos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            nome: nomeServico.value,
-            valor: valorServico.value
-        })
-    })
-    .then(r => r.json())
-    .then(d => {
-        alert(d.msg);
-        nomeServico.value = "";
-        valorServico.value = "";
-        carregarServicos();
-    });
-}
-
-function carregarServicos() {
-    fetch("/servicos")
-        .then(r => r.json())
-        .then(lista => {
-            if (!Array.isArray(lista)) return; // blindagem
-            listaServicos.innerHTML = "";
-            lista.forEach(s => {
-                const li = document.createElement("li");
-                li.innerText = `${s[1]} — R$ ${s[2]}`;
-                listaServicos.appendChild(li);
-            });
+        .then(d => {
+            let txt = `Abertura: R$ ${d.abertura}\n`;
+            for (let k in d) {
+                if (k !== "abertura" && k !== "total") {
+                    txt += `${k}: R$ ${d[k]}\n`;
+                }
+            }
+            txt += `\nTOTAL EM CAIXA: R$ ${d.total}`;
+            resumoCaixa.innerText = txt;
         });
 }
