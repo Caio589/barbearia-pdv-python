@@ -12,16 +12,18 @@ def get_db_connection():
     )
 
     if not _tabelas_criadas:
-        criar_tabelas(conn)
+        criar_tabelas_e_colunas(conn)
         _tabelas_criadas = True
 
     return conn
 
 
-def criar_tabelas(conn):
+def criar_tabelas_e_colunas(conn):
     cur = conn.cursor()
 
+    # ======================
     # CLIENTES
+    # ======================
     cur.execute("""
         CREATE TABLE IF NOT EXISTS clientes (
             id SERIAL PRIMARY KEY,
@@ -30,25 +32,41 @@ def criar_tabelas(conn):
         )
     """)
 
-    # SERVIÇOS
+    # ======================
+    # SERVICOS
+    # ======================
     cur.execute("""
         CREATE TABLE IF NOT EXISTS servicos (
             id SERIAL PRIMARY KEY,
-            nome VARCHAR(100),
-            valor NUMERIC(10,2)
+            nome VARCHAR(100)
         )
     """)
 
+    # adiciona coluna valor se não existir
+    cur.execute("""
+        ALTER TABLE servicos
+        ADD COLUMN IF NOT EXISTS valor NUMERIC(10,2)
+    """)
+
+    # ======================
     # CAIXA
+    # ======================
     cur.execute("""
         CREATE TABLE IF NOT EXISTS caixa (
             id SERIAL PRIMARY KEY,
-            aberto BOOLEAN DEFAULT TRUE,
-            abertura NUMERIC(10,2),
-            data_abertura TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            aberto BOOLEAN DEFAULT TRUE
         )
     """)
 
+    # adiciona coluna abertura se não existir
+    cur.execute("""
+        ALTER TABLE caixa
+        ADD COLUMN IF NOT EXISTS abertura NUMERIC(10,2)
+    """)
+
+    # ======================
+    # MOVIMENTACOES
+    # ======================
     cur.execute("""
         CREATE TABLE IF NOT EXISTS movimentacoes (
             id SERIAL PRIMARY KEY,
