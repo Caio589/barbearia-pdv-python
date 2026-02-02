@@ -1,4 +1,4 @@
- import psycopg2
+import psycopg2
 import os
 
 _tabelas_criadas = False
@@ -21,6 +21,7 @@ def get_db_connection():
 def criar_tabelas(conn):
     cur = conn.cursor()
 
+    # CLIENTES
     cur.execute("""
         CREATE TABLE IF NOT EXISTS clientes (
             id SERIAL PRIMARY KEY,
@@ -29,6 +30,7 @@ def criar_tabelas(conn):
         )
     """)
 
+    # SERVIÇOS
     cur.execute("""
         CREATE TABLE IF NOT EXISTS servicos (
             id SERIAL PRIMARY KEY,
@@ -37,6 +39,7 @@ def criar_tabelas(conn):
         )
     """)
 
+    # CAIXA
     cur.execute("""
         CREATE TABLE IF NOT EXISTS caixa (
             id SERIAL PRIMARY KEY,
