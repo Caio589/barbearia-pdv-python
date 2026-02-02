@@ -1,4 +1,4 @@
-import psycopg2
+ import psycopg2
 import os
 
 _tabelas_criadas = False
@@ -24,7 +24,7 @@ def criar_tabelas(conn):
     cur.execute("""
         CREATE TABLE IF NOT EXISTS clientes (
             id SERIAL PRIMARY KEY,
-            nome VARCHAR(100) NOT NULL,
+            nome VARCHAR(100),
             telefone VARCHAR(30)
         )
     """)
@@ -32,8 +32,27 @@ def criar_tabelas(conn):
     cur.execute("""
         CREATE TABLE IF NOT EXISTS servicos (
             id SERIAL PRIMARY KEY,
-            nome VARCHAR(100) NOT NULL,
-            valor NUMERIC(10,2) NOT NULL
+            nome VARCHAR(100),
+            valor NUMERIC(10,2)
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS caixa (
+            id SERIAL PRIMARY KEY,
+            aberto BOOLEAN DEFAULT TRUE,
+            abertura NUMERIC(10,2),
+            data_abertura TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS movimentacoes (
+            id SERIAL PRIMARY KEY,
+            caixa_id INTEGER,
+            valor NUMERIC(10,2),
+            forma_pagamento VARCHAR(20),
+            data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
 
