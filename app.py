@@ -249,3 +249,60 @@ def vender_plano():
     cur.close()
     conn.close()
     return jsonify({"msg": "Plano vendido ao cliente"})
+    from datetime import date, timedelta
+from flask import request, jsonify
+
+# CRIAR PLANO
+@app.route("/planos", methods=["POST"])
+def criar_plano():
+    dados = request.json
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        "INSERT INTO planos (nome, usos_totais, valor) VALUES (%s,%s,%s)",
+        (dados["nome"], dados["usos"], dados["valor"])
+    )
+
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({"msg": "Plano criado com sucesso"})
+
+
+# LISTAR PLANOS
+@app.route("/planos")
+def listar_planos():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM planos")
+    planos = cur.fetchall()
+    cur.close()
+    conn.close()
+    return jsonify(planos)
+
+
+# VENDER PLANO
+@app.route("/vender_plano", methods=["POST"])
+def vender_plano():
+    dados = request.json
+    inicio = date.today()
+    fim = inicio + timedelta(days=30)
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO cliente_planos
+        (cliente_id, plano_id, usos_restantes, data_inicio, data_fim)
+        VALUES (
+            %s, %s,
+            (SELECT usos_totais FROM planos WHERE id=%s),
+            %s, %s
+        )
+    """, (dados["cliente_id"], dados["plano_id"], dados["plano_id"], inicio, fim))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({"msg": "Plano vendido ao cliente"})
