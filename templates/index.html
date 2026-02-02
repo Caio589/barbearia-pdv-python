@@ -7,67 +7,45 @@
 </head>
 <body>
 
+<!-- FUNDO COM FOTO -->
+<div class="background"></div>
+
 <!-- MENU LATERAL -->
 <div class="sidebar">
+    <button onclick="mostrarTela('inicio')" title="Início">🏠</button>
     <button onclick="mostrarTela('clientes')" title="Clientes">👤</button>
+    <button onclick="mostrarTela('servicos')" title="Serviços">✂️</button>
     <button onclick="mostrarTela('agenda')" title="Agenda">📅</button>
     <button onclick="mostrarTela('planos')" title="Planos">📦</button>
-    <button onclick="mostrarTela('servicos')" title="Serviços">✂️</button>
 </div>
 
 <!-- CONTEÚDO -->
 <div class="content">
 
-    <!-- CLIENTES -->
+    <section id="inicio" class="tela">
+        <h1>Barbearia</h1>
+        <p>Sistema profissional de gestão</p>
+    </section>
+
     <section id="clientes" class="tela">
         <h2>Clientes</h2>
-        <p>Módulo de clientes funcionando.</p>
-    </section>
-
-    <!-- AGENDA (SÓ AGENDAR) -->
-    <section id="agenda" class="tela">
-        <h2>Agenda</h2>
-
-        <input placeholder="Cliente">
-        <input type="date">
-        <input type="time">
-
-        <button>Agendar</button>
-    </section>
-
-    <!-- PLANOS (TELA EXCLUSIVA) -->
-    <section id="planos" class="tela">
-        <h2>Planos</h2>
-
-        <h3>Criar plano</h3>
-        <input id="nomePlano" placeholder="Nome do plano">
-        <input id="usosPlano" type="number" placeholder="Quantidade de usos">
-        <input id="valorPlano" type="number" placeholder="Valor">
-        <button onclick="criarPlano()">Salvar plano</button>
-
-        <hr>
-
-        <h3>Vender plano</h3>
-        <input id="clientePlano" placeholder="ID do cliente">
-        <input id="planoID" placeholder="ID do plano">
-        <button onclick="venderPlano()">Vender plano</button>
+        <p>Módulo em construção</p>
     </section>
 
     <section id="servicos" class="tela">
-    <h2>Serviços</h2>
+        <h2>Serviços</h2>
+        <p>Módulo em construção</p>
+    </section>
 
-    <h3>Cadastrar serviço</h3>
-    <input id="nomeServico" placeholder="Nome do serviço">
-    <input id="valorServico" type="number" placeholder="Valor (R$)">
-    <input id="duracaoServico" type="number" placeholder="Duração (min)">
+    <section id="agenda" class="tela">
+        <h2>Agenda</h2>
+        <p>Apenas agendamentos</p>
+    </section>
 
-    <button onclick="criarServico()">Salvar serviço</button>
-
-    <hr>
-
-    <h3>Serviços cadastrados</h3>
-    <ul id="listaServicos"></ul>
-</section>
+    <section id="planos" class="tela">
+        <h2>Planos</h2>
+        <p>Módulo de planos</p>
+    </section>
 
 </div>
 
