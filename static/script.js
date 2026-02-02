@@ -128,3 +128,40 @@ function carregarPlanos() {
 }
 
 document.addEventListener("DOMContentLoaded", carregarPlanos);
+
+function salvarProduto() {
+    fetch("/produtos", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+            nome: nomeProduto.value,
+            valor: valorProduto.value,
+            estoque: estoqueProduto.value
+        })
+    })
+    .then(r => r.json())
+    .then(d => {
+        alert(d.msg);
+        nomeProduto.value = "";
+        valorProduto.value = "";
+        estoqueProduto.value = "";
+        carregarProdutos();
+    });
+}
+
+function carregarProdutos() {
+    fetch("/produtos")
+        .then(r=>r.json())
+        .then(lista=>{
+            if(!Array.isArray(lista)) return;
+            listaProdutos.innerHTML="";
+            lista.forEach(p=>{
+                const li=document.createElement("li");
+                li.innerText=`${p[1]} — R$ ${p[2]} (Estoque: ${p[3]})`;
+                listaProdutos.appendChild(li);
+            });
+        });
+}
+
+document.addEventListener("DOMContentLoaded", carregarProdutos);
+
