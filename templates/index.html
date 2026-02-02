@@ -12,6 +12,7 @@
     <button onclick="mostrarTela('clientes')" title="Clientes">👤</button>
     <button onclick="mostrarTela('agenda')" title="Agenda">📅</button>
     <button onclick="mostrarTela('planos')" title="Planos">📦</button>
+    <button onclick="mostrarTela('servicos')" title="Serviços">✂️</button>
 </div>
 
 <!-- CONTEÚDO -->
@@ -51,6 +52,22 @@
         <input id="planoID" placeholder="ID do plano">
         <button onclick="venderPlano()">Vender plano</button>
     </section>
+
+    <section id="servicos" class="tela">
+    <h2>Serviços</h2>
+
+    <h3>Cadastrar serviço</h3>
+    <input id="nomeServico" placeholder="Nome do serviço">
+    <input id="valorServico" type="number" placeholder="Valor (R$)">
+    <input id="duracaoServico" type="number" placeholder="Duração (min)">
+
+    <button onclick="criarServico()">Salvar serviço</button>
+
+    <hr>
+
+    <h3>Serviços cadastrados</h3>
+    <ul id="listaServicos"></ul>
+</section>
 
 </div>
 
