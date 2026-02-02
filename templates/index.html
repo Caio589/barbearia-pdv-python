@@ -7,43 +7,50 @@
 </head>
 <body>
 
-<div class="menu">
-    <button onclick="mostrarTela('clientes')">👤</button>
-    <button onclick="mostrarTela('agenda')">📅</button>
-    <button onclick="mostrarTela('planos')">📦</button>
+<!-- MENU LATERAL -->
+<div class="sidebar">
+    <button onclick="mostrarTela('clientes')" title="Clientes">👤</button>
+    <button onclick="mostrarTela('agenda')" title="Agenda">📅</button>
+    <button onclick="mostrarTela('planos')" title="Planos">📦</button>
 </div>
 
-<div class="conteudo">
+<!-- CONTEÚDO -->
+<div class="content">
 
-<section id="clientes" class="tela">
-    <h2>Clientes</h2>
-    <p>Funcionando</p>
-</section>
+    <!-- CLIENTES -->
+    <section id="clientes" class="tela">
+        <h2>Clientes</h2>
+        <p>Módulo de clientes funcionando.</p>
+    </section>
 
-<section id="agenda" class="tela">
-    <h2>Agenda</h2>
+    <!-- AGENDA (SÓ AGENDAR) -->
+    <section id="agenda" class="tela">
+        <h2>Agenda</h2>
 
-    <h3>Usar plano no atendimento</h3>
-    <input id="clienteUsoPlano" placeholder="ID do cliente">
-    <button onclick="usarPlano()">Usar plano</button>
-</section>
+        <input placeholder="Cliente">
+        <input type="date">
+        <input type="time">
 
-<section id="planos" class="tela">
-    <h2>Planos</h2>
+        <button>Agendar</button>
+    </section>
 
-    <h3>Criar plano</h3>
-    <input id="nomePlano" placeholder="Nome">
-    <input id="usosPlano" type="number" placeholder="Usos">
-    <input id="valorPlano" type="number" placeholder="Valor">
-    <button onclick="criarPlano()">Salvar</button>
+    <!-- PLANOS (TELA EXCLUSIVA) -->
+    <section id="planos" class="tela">
+        <h2>Planos</h2>
 
-    <hr>
+        <h3>Criar plano</h3>
+        <input id="nomePlano" placeholder="Nome do plano">
+        <input id="usosPlano" type="number" placeholder="Quantidade de usos">
+        <input id="valorPlano" type="number" placeholder="Valor">
+        <button onclick="criarPlano()">Salvar plano</button>
 
-    <h3>Vender plano</h3>
-    <input id="clientePlano" placeholder="ID do cliente">
-    <input id="planoID" placeholder="ID do plano">
-    <button onclick="venderPlano()">Vender</button>
-</section>
+        <hr>
+
+        <h3>Vender plano</h3>
+        <input id="clientePlano" placeholder="ID do cliente">
+        <input id="planoID" placeholder="ID do plano">
+        <button onclick="venderPlano()">Vender plano</button>
+    </section>
 
 </div>
 
