@@ -75,3 +75,122 @@ def agenda():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT",5000)))
+from datetime import date
+from flask import request, jsonify
+
+# ABRIR CAIXA
+@app.route("/abrir_caixa", methods=["POST"])
+def abrir_caixa():
+    abertura = request.json.get("abertura")
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT id FROM caixa WHERE status='aberto'")
+    if cur.fetchone():
+        return jsonify({"erro": "Já existe um caixa aberto"}), 400
+
+    cur.execute(
+        "INSERT INTO caixa (data, abertura, status) VALUES (%s, %s, 'aberto') RETURNING id",
+        (date.today(), abertura)
+    )
+    caixa_id = cur.fetchone()[0]
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify({"msg": "Caixa aberto", "caixa_id": caixa_id})
+
+
+# ADICIONAR MOVIMENTAÇÃO
+@app.route("/movimentacao", methods=["POST"])
+def movimentacao():
+    dados = request.json
+    tipo = dados["tipo"]
+    descricao = dados["descricao"]
+    valor = dados["valor"]
+    forma = dados.get("forma_pagamento")
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT id FROM caixa WHERE status='aberto'")
+    caixa = cur.fetchone()
+    if not caixa:
+        return jsonify({"erro": "Nenhum caixa aberto"}), 400
+
+    cur.execute("""
+        INSERT INTO movimentacoes (caixa_id, tipo, descricao, valor, forma_pagamento)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (caixa[0], tipo, descricao, valor, forma))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify({"msg": "Movimentação registrada"})
+
+
+# RESUMO DO CAIXA
+@app.route("/resumo_caixa")
+def resumo_caixa():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT id, abertura FROM caixa WHERE status='aberto'")
+    caixa = cur.fetchone()
+    if not caixa:
+        return jsonify({"aberto": False})
+
+    cur.execute("""
+        SELECT tipo, SUM(valor)
+        FROM movimentacoes
+        WHERE caixa_id=%s
+        GROUP BY tipo
+    """, (caixa[0],))
+
+    resumo = {row[0]: float(row[1]) for row in cur.fetchall()}
+
+    cur.close()
+    conn.close()
+
+    return jsonify({
+        "aberto": True,
+        "abertura": float(caixa[1]),
+        "entradas": resumo.get("entrada", 0),
+        "saidas": resumo.get("saida", 0)
+    })
+
+
+# FECHAR CAIXA
+@app.route("/fechar_caixa", methods=["POST"])
+def fechar_caixa():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT id, abertura FROM caixa WHERE status='aberto'")
+    caixa = cur.fetchone()
+    if not caixa:
+        return jsonify({"erro": "Nenhum caixa aberto"}), 400
+
+    cur.execute("""
+        SELECT 
+        SUM(CASE WHEN tipo='entrada' THEN valor ELSE 0 END),
+        SUM(CASE WHEN tipo='saida' THEN valor ELSE 0 END)
+        FROM movimentacoes WHERE caixa_id=%s
+    """, (caixa[0],))
+
+    entradas, saidas = cur.fetchone()
+    saldo = (entradas or 0) - (saidas or 0)
+
+    cur.execute(
+        "UPDATE caixa SET fechamento=%s, status='fechado' WHERE id=%s",
+        (saldo, caixa[0])
+    )
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify({"msg": "Caixa fechado", "saldo": float(saldo)})
