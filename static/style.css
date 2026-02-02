@@ -9,11 +9,11 @@ body {
     color: #fff;
 }
 
-/* FUNDO BARBEARIA REAL */
+/* FUNDO BARBEARIA – CDN ESTÁVEL */
 .background {
     position: fixed;
     inset: 0;
-    background-image: url("https://images.unsplash.com/photo-1517832606294-8b35c7b6f9a0");
+    background-image: url("https://images.pexels.com/photos/3998429/pexels-photo-3998429.jpeg");
     background-size: cover;
     background-position: center;
     opacity: 0.18;
@@ -34,7 +34,7 @@ body {
     padding-top: 20px;
 }
 
-/* ÍCONES ESCUROS COM EFEITO */
+/* ÍCONES ESCUROS COM EFEITO FLUTUANTE */
 .sidebar button {
     background: #111;
     border: none;
